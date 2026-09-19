@@ -1,0 +1,1399 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<script>
+// แสดงข้อผิดพลาดบนหน้าจอ เพื่อให้รู้สาเหตุเวลาแอปไม่ทำงาน
+window.addEventListener('error', function (e) {
+  var box = document.createElement('div');
+  box.style.cssText = 'position:fixed;left:12px;right:12px;top:12px;z-index:999;background:#e5484d;color:#fff;padding:12px 14px;border-radius:12px;font:14px/1.5 sans-serif;white-space:pre-wrap';
+  var ln = '';
+  try { if (e.lineno) ln = '\n> ' + document.documentElement.outerHTML.split('\n')[e.lineno - 1].trim().slice(0, 160); } catch (x) {}
+  box.textContent = 'เกิดข้อผิดพลาด: ' + e.message + (e.lineno ? '\nบรรทัดที่ ' + e.lineno : '') + ln +
+    '\n\nลองปิดแอปแล้วเปิดใหม่ ถ้ายังเป็นอยู่ให้แคปหน้าจอนี้ไว้';
+  (document.body || document.documentElement).appendChild(box);
+});
+</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Top Spender</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Top Spender">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#f3f4f6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0c0e12" media="(prefers-color-scheme: dark)">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f3f4f6; --surface:#ffffff; --ink:#16181d; --ink2:#5e6470; --ink3:#9aa0ab; --line:#e6e8ec;
+  --accent:#2f6bff; --out:#e5484d; --in:#23915f;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#0c0e12;--surface:#171a20;--ink:#f2f4f7;--ink2:#a4aab5;--ink3:#6b7280;--line:#262a32;
+        --accent:#7b9fff;--out:#ff6b70;--in:#4cc38a;}
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg)}
+body{margin:0 auto;max-width:520px;color:var(--ink);
+  font-family:"Anuphan","Sukhumvit Set","Thonburi",-apple-system,system-ui,sans-serif;font-size:16px;line-height:1.5;
+  padding:calc(env(safe-area-inset-top) + 18px) 20px calc(env(safe-area-inset-bottom) + 120px);
+  -webkit-font-smoothing:antialiased}
+body.lock{overflow:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:inherit}
+[hidden]{display:none!important}
+.num{font-variant-numeric:tabular-nums}
+.out{color:var(--out)} .in{color:var(--in)}
+.empty{color:var(--ink3);text-align:center;padding:28px 8px;font-size:15px}
+h1{font-size:22px;font-weight:600;margin:0;letter-spacing:-.01em}
+h2{font-size:15px;font-weight:600;margin:0 0 12px}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+svg{flex:none}
+
+/* ปุ่ม */
+.ib{width:40px;height:40px;border-radius:50%;border:0;background:var(--surface);display:grid;place-items:center;color:var(--ink)}
+.btn{width:100%;height:54px;border:0;border-radius:16px;background:var(--ink);color:var(--surface);font-size:17px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn:disabled{opacity:.45}
+.ghost{border:0;background:var(--bg);border-radius:999px;padding:7px 14px;font-size:14px;font-weight:500;display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--ink)}
+.block .ghost{background:var(--bg)}
+.link{border:0;background:none;padding:0;font-size:14px;font-weight:600;color:var(--accent);display:inline-flex;align-items:center;gap:4px}
+
+/* ส่วนหัว */
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+.navs{display:flex;gap:8px}
+.hero{margin-bottom:26px}
+.lbl{font-size:14px;color:var(--ink2)}
+.big{font-size:56px;font-weight:500;letter-spacing:-.035em;line-height:1.05;margin:4px 0 14px}
+.big .cur{font-size:.45em;font-weight:500;color:var(--ink3);margin-right:4px;vertical-align:.55em;letter-spacing:0}
+.stats{display:flex;gap:28px}
+.stats span{display:block;font-size:13px;color:var(--ink3)}
+.stats b{font-size:17px;font-weight:600}
+
+.block{background:var(--surface);border-radius:22px;padding:18px;margin-bottom:14px}
+.bh{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.bh h2{margin:0}
+
+/* สัดส่วนหมวด */
+.stack{display:flex;gap:3px;height:10px;margin-bottom:16px}
+.stack i{display:block;background:var(--ink);border-radius:3px;min-width:4px}
+.leg{display:grid;grid-template-columns:10px 1fr auto 44px;align-items:center;gap:10px;padding:5px 0;font-size:15px}
+.leg i{width:10px;height:10px;border-radius:3px;background:var(--ink)}
+.leg b{font-weight:500} .leg em{font-style:normal;color:var(--ink3);font-size:13px;text-align:right}
+
+/* รายการ */
+.dh{display:flex;justify-content:space-between;font-size:13px;color:var(--ink3);margin:18px 0 2px}
+.dh:first-child{margin-top:0}
+.row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.row .c{flex:1;min-width:0}
+.row .t{font-weight:500}
+.row .s{font-size:13px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .v{font-weight:600;white-space:nowrap}
+.del{border:0;background:none;color:var(--ink3);padding:4px;display:grid;place-items:center;border-radius:8px}
+.tap{cursor:pointer}
+
+/* แถบล่าง + ปุ่มเพิ่ม */
+.tabbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 14px);z-index:40;
+  display:flex;gap:4px;padding:5px;border-radius:999px;border:1px solid var(--line);
+  background:color-mix(in srgb,var(--surface) 80%,transparent);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);
+  box-shadow:0 10px 30px rgba(0,0,0,.08)}
+.tabbar button{border:0;background:none;border-radius:999px;padding:10px 18px;display:flex;align-items:center;gap:8px;font-size:15px;font-weight:500;color:var(--ink2)}
+.tabbar button.on{background:var(--ink);color:var(--surface)}
+.fab{position:fixed;right:max(20px,calc(50% - 240px));bottom:calc(env(safe-area-inset-bottom) + 14px);z-index:41;width:56px;height:56px;border-radius:50%;
+  border:0;background:var(--ink);color:var(--surface);display:grid;place-items:center;box-shadow:0 10px 30px rgba(0,0,0,.18)}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 84px);transform:translate(-50%,12px);z-index:90;
+  background:var(--ink);color:var(--surface);padding:10px 18px;border-radius:999px;font-size:15px;opacity:0;transition:.2s;pointer-events:none;max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ส่วนบันทึก */
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--bg);border-radius:12px;padding:3px}
+.seg button{border:0;background:none;padding:9px 4px;border-radius:10px;font-weight:500;color:var(--ink2);font-size:15px}
+.seg button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.amt{display:flex;align-items:baseline;gap:6px;margin:22px 0 4px}
+.amt span{font-size:28px;color:var(--ink3)}
+.amt input{flex:1;min-width:0;border:0;background:none;outline:none;font-size:48px;font-weight:500;letter-spacing:-.03em;padding:0}
+.amt input::placeholder{color:var(--line)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:12px 20px 4px;margin:0 -20px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid var(--line);background:none;border-radius:999px;padding:7px 14px;font-size:15px;color:var(--ink)}
+.chip.on{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.checks{display:flex;flex-wrap:wrap;gap:8px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.grid2 input,.proprow select{border:0;background:var(--bg);border-radius:12px;padding:0 12px;font-size:16px;height:48px;width:100%}
+.proprow{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:12px}
+
+/* ทริป */
+.trip{display:block;width:100%;text-align:left;border:0;background:var(--surface);border-radius:22px;padding:20px;margin-bottom:12px}
+.trip .n{font-size:21px;font-weight:600;letter-spacing:-.01em}
+.trip .m{font-size:14px;color:var(--ink2);margin-top:2px}
+.pill{display:inline-block;font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;background:var(--bg);color:var(--ink2)}
+.pill.soon{color:var(--accent)} .pill.now,.pill.ok{color:var(--in)} .pill.no{color:var(--out)}
+.trip .pill{margin-top:12px}
+.thead{display:flex;align-items:flex-start;gap:12px;margin-bottom:18px}
+.thead .mid{flex:1;min-width:0;padding-top:4px}
+.thead h1{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.thead .m{font-size:14px;color:var(--ink2)}
+.tabs{display:flex;gap:22px;border-bottom:1px solid var(--line);margin:0 -20px 18px;padding:0 20px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:none;border:0;background:none;padding:10px 0;font-size:15px;font-weight:500;color:var(--ink3);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs button.on{color:var(--ink);border-color:var(--ink)}
+
+.ticket{padding:14px 0;border-bottom:1px solid var(--line)}
+.ticket:last-child{border-bottom:0;padding-bottom:0}
+.ticket:first-of-type{padding-top:0}
+.tk-top{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--ink2)}
+.tk-route{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;margin:8px 0 6px}
+.tk-route b{display:block;font-size:26px;font-weight:600;letter-spacing:-.01em;line-height:1.1}
+.tk-route small{font-size:13px;color:var(--ink2)}
+.tk-route .r{text-align:right}
+.tk-line{position:relative;border-top:1.5px dashed var(--line);display:grid;place-items:center}
+.tk-line svg{position:absolute;top:-10px;background:var(--surface);padding:0 4px;color:var(--ink3);box-sizing:content-box}
+.meta{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;color:var(--ink2)}
+.acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.th{width:88px;height:66px;object-fit:cover;border-radius:12px;display:block}
+.nt{font-size:14px;color:var(--ink2);margin-top:4px;white-space:pre-wrap}
+
+.days{display:flex;gap:6px;overflow-x:auto;margin:0 -20px 14px;padding:0 20px;scrollbar-width:none}
+.days::-webkit-scrollbar{display:none}
+.days button{flex:none;border:0;background:var(--surface);border-radius:14px;padding:8px 14px;text-align:left;min-width:74px}
+.days b{display:block;font-size:14px;font-weight:600}
+.days span{font-size:12px;color:var(--ink3)}
+.days button.on{background:var(--ink);color:var(--surface)} .days button.on span{color:var(--surface);opacity:.6}
+.banner{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--ink2);padding:0 4px 12px}
+
+.tl{margin-bottom:14px}
+.tli{display:grid;grid-template-columns:44px 12px 1fr;gap:10px;position:relative;padding-bottom:18px}
+.tli::before{content:"";position:absolute;left:59px;top:14px;bottom:-2px;width:1px;background:var(--line)}
+.tli:last-child::before{display:none}
+.tm{font-size:13px;font-weight:600;color:var(--ink2);text-align:right;padding-top:2px}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--ink);margin:6px 0 0 1px;position:relative;z-index:1}
+.tli.leg .dot{background:var(--surface);border:1.5px solid var(--ink3)}
+.tt{font-weight:600;font-size:16px;line-height:1.35}
+.tli.leg .tt{font-weight:500;font-size:14px;color:var(--ink2)}
+.tli.leg .tr{font-size:15px}
+.sub{font-size:13px;color:var(--ink3)}
+.cost{font-size:13px;color:var(--ink2);margin-top:2px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pair .ghost{justify-content:center;padding:12px;border-radius:14px}
+
+.kv{display:grid;grid-template-columns:1fr auto;gap:8px 12px;font-size:15px}
+.kv span{color:var(--ink2)} .kv b{font-weight:500;text-align:right}
+.kv .big2{font-size:28px;font-weight:600;letter-spacing:-.02em}
+.who{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.who:last-child{border-bottom:0}
+.who .s{font-size:13px;color:var(--ink2)}
+.who .v{text-align:right;font-weight:600;align-self:center}
+
+/* ฟอร์ม */
+.sheet-bg{position:fixed;inset:0;background:rgba(10,12,16,.4);display:none;z-index:60;align-items:flex-end}
+.sheet-bg.show{display:flex}
+.sheet{background:var(--surface);width:100%;max-width:520px;margin:0 auto;border-radius:26px 26px 0 0;max-height:92vh;display:flex;flex-direction:column;animation:up .22s ease-out}
+@keyframes up{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}
+.shh{display:grid;grid-template-columns:72px 1fr 72px;align-items:center;padding:14px 16px 10px;text-align:center}
+.shh::before{content:"";position:absolute;left:50%;margin-left:-18px;margin-top:-26px;width:36px;height:4px;border-radius:2px;background:var(--line)}
+.shh b{font-weight:600}
+.shh button{border:0;background:none;font-size:16px;color:var(--ink2);padding:4px;text-align:left}
+.shh .strong{color:var(--accent);font-weight:600;text-align:right}
+.shb{overflow-y:auto;padding:8px 20px calc(env(safe-area-inset-bottom) + 24px);-webkit-overflow-scrolling:touch}
+.fld{margin-bottom:14px}
+.fl{display:block;font-size:13px;color:var(--ink2);margin-bottom:6px}
+.fld input,.fld select,.fld textarea{width:100%;border:0;background:var(--bg);border-radius:12px;padding:12px;font-size:16px;min-height:48px}
+.fld textarea{min-height:76px;resize:vertical}
+input[type=date],input[type=time]{-webkit-appearance:none;appearance:none}
+.mrow{display:grid;grid-template-columns:1fr auto;gap:8px}
+.mrow button{border:0;background:var(--ink);color:var(--surface);border-radius:12px;padding:0 16px;font-size:14px;font-weight:600}
+.ph{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ph.busy{opacity:.45;pointer-events:none}
+.phbtn{border:1.5px dashed var(--line);border-radius:12px;padding:10px 14px;font-size:15px;display:inline-flex;align-items:center;gap:8px;color:var(--ink2)}
+.phimg img{width:88px;height:66px;object-fit:cover;border-radius:12px;display:block}
+.prow{display:grid;grid-template-columns:1fr 120px;gap:8px;align-items:center;margin-top:8px}
+.prow input{border:0;background:var(--bg);border-radius:10px;padding:10px;font-size:16px;text-align:right;width:100%}
+.hint{font-size:14px;color:var(--ink2);margin-top:10px}
+.danger{width:100%;border:0;background:none;color:var(--out);font-weight:600;padding:14px;margin-top:4px}
+.viewer{position:fixed;inset:0;background:#000;z-index:80;display:none;align-items:center;justify-content:center;flex-direction:column}
+.viewer.show{display:flex}
+.viewer img{max-width:100%;max-height:90vh;object-fit:contain}
+.viewer .vh{color:#999;font-size:14px;margin-top:10px}
+/* แถบสถานะ iPhone ตอนเปิดจากหน้าจอโฮม */
+.sbar{position:fixed;left:0;right:0;top:0;height:env(safe-area-inset-top);z-index:95;pointer-events:none;background:var(--ink)}
+@media (prefers-color-scheme:dark){.sbar{background:var(--bg)}}
+
+/* หน้าเชื่อมต่อครั้งแรก */
+.gate{position:fixed;inset:0;z-index:100;background:var(--bg);overflow-y:auto;
+  padding:calc(env(safe-area-inset-top) + 56px) 24px calc(env(safe-area-inset-bottom) + 24px)}
+.gbox{max-width:420px;margin:0 auto}
+.gbox .logo{width:64px;height:64px;border-radius:16px;display:block;margin-bottom:20px}
+.gbox h1{font-size:30px;margin-bottom:6px}
+.gbox p{color:var(--ink2);margin:0 0 26px}
+.gbox .fld input{background:var(--surface)}
+.gmsg{color:var(--out);font-size:14px;min-height:21px;margin:-4px 0 12px}
+
+/* หมวดที่เพิ่มเอง */
+.chip{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.chip[data-custom]{border-style:dashed}
+.chip.on[data-custom]{border-style:solid}
+.othr{width:100%;border:0;background:var(--bg);border-radius:12px;padding:0 12px;font-size:16px;height:48px;margin-top:10px}
+.catpick{display:flex;flex-wrap:wrap;gap:8px}
+.tiny{font-size:12px;color:var(--ink3);margin-top:6px}
+
+/* สรุปหมวดในทริป */
+.pick{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.pick .chip{padding:5px 12px;font-size:14px}
+.ctot{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px}
+.ctot b{font-size:24px;font-weight:600;letter-spacing:-.02em}
+.ctot span{font-size:14px;color:var(--ink2)}
+button.leg{width:100%;border:0;background:none;padding:5px 0;text-align:left;font-size:15px}
+button.leg span{color:var(--accent)}
+.row .v small{display:block;font-size:12px;font-weight:400;color:var(--ink3);text-align:right}
+.pill.est{color:#b7791f;margin-left:6px;padding:1px 8px;font-size:11px;vertical-align:1px}
+@media (prefers-color-scheme:dark){.pill.est{color:#f0b35a}}
+
+@media (prefers-reduced-motion:reduce){.toast{transition:none}.sheet{animation:none}}
+</style>
+</head>
+<body>
+
+<!-- ===== บัญชีส่วนตัว ===== -->
+<section id="ledger">
+  <header class="top">
+    <h1 id="mLabel"></h1>
+    <div class="navs">
+      <button class="ib" id="gear" aria-label="ตั้งค่าการเชื่อมต่อ"></button>
+      <button class="ib" id="prev" aria-label="เดือนก่อน"></button>
+      <button class="ib" id="next" aria-label="เดือนถัดไป"></button>
+    </div>
+  </header>
+  <div class="hero">
+    <div class="lbl">จ่ายไปเดือนนี้</div>
+    <div class="big num" id="tOut"></div>
+    <div class="stats">
+      <div><span>รายรับ</span><b class="num" id="tIn">฿0</b></div>
+      <div><span>คงเหลือ</span><b class="num" id="tBal">฿0</b></div>
+    </div>
+  </div>
+  <div class="block" id="catCard" hidden><h2>จ่ายไปกับอะไร</h2><div class="stack" id="stack"></div><div id="cats"></div></div>
+  <div class="block" id="rentCard" hidden><h2>บ้านเช่า</h2><div id="rents"></div></div>
+  <div class="block"><h2>รายการ</h2><div id="list"><div class="empty">กำลังโหลด…</div></div></div>
+  <button class="fab" id="fab" aria-label="บันทึกรายการ"></button>
+</section>
+
+<!-- หน้าบันทึกรายรับรายจ่าย -->
+<div class="sheet-bg" id="entryBg">
+  <div class="sheet">
+    <div class="shh"><button data-close>ยกเลิก</button><b>บันทึกรายการ</b><span></span></div>
+    <div class="shb">
+      <div class="seg"><button id="bOut" class="on">รายจ่าย</button><button id="bIn">รายรับ</button></div>
+      <label class="amt"><span>฿</span><input id="amt" inputmode="decimal" placeholder="0" autocomplete="off"></label>
+      <div class="chips" id="chips"></div>
+      <div id="otherRow" hidden>
+        <input class="othr" id="otherName" placeholder="ค่าอะไร? เช่น ซักผ้า (ไม่ใส่ก็ได้)" autocomplete="off">
+        <div class="tiny">ชื่อที่พิมพ์จะกลายเป็นปุ่มหมวดใหม่ ครั้งหน้ากดได้เลย (กดค้างที่ปุ่มเพื่อแก้หรือลบ)</div>
+      </div>
+      <div class="proprow" id="propRow" hidden>
+        <select id="prop"></select>
+        <button class="ghost" id="addProp" type="button">เพิ่มบ้าน</button>
+      </div>
+      <div class="grid2">
+        <input type="date" id="date">
+        <input id="note" placeholder="หมายเหตุ" autocomplete="off">
+      </div>
+      <button class="btn" id="save" style="margin-top:18px">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ทริป ===== -->
+<section id="trips" hidden></section>
+
+<nav class="tabbar">
+  <button data-tab="ledger" class="on"></button>
+  <button data-tab="trips"></button>
+</nav>
+
+<div class="sheet-bg" id="sheetBg"><div class="sheet" id="sheet"></div></div>
+<div class="viewer" id="viewer"></div>
+<div class="toast" id="toast"></div>
+<div class="sbar"></div>
+
+<div class="gate" id="gate" hidden>
+  <div class="gbox">
+    <img class="logo" alt="" src="apple-touch-icon.png">
+    <h1>Top Spender</h1>
+    <p>เชื่อมต่อกับ Google Sheet ของคุณ ทำครั้งเดียวต่อเครื่อง</p>
+    <div class="fld"><label class="fl" for="gUrl">ลิงก์ Apps Script (ลงท้ายด้วย /exec)</label>
+      <input id="gUrl" type="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://script.google.com/macros/s/…/exec"></div>
+    <div class="fld"><label class="fl" for="gKey">รหัสลับ</label>
+      <input id="gKey" type="password" autocomplete="off" autocapitalize="off"></div>
+    <div class="gmsg" id="gMsg"></div>
+    <button class="btn" id="gGo">เชื่อมต่อ</button>
+  </div>
+</div>
+
+<script>
+/* ---------- ไอคอน ---------- */
+const IC = {
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  left: '<path d="M15 18l-6-6 6-6"/>',
+  right: '<path d="M9 6l6 6-6 6"/>',
+  edit: '<path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/>',
+  x: '<path d="M7 7l10 10M17 7L7 17"/>',
+  pin: '<path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+  route: '<circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h7.5a3.5 3.5 0 000-7h-7a3.5 3.5 0 010-7H16"/>',
+  camera: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+  wallet: '<path d="M4 7h14a2 2 0 012 2v9a2 2 0 01-2 2H4z"/><path d="M4 7V6a2 2 0 012-2h10"/><path d="M16 13.5h.01"/>',
+  plane: '<path d="M21 3L3 10.5l7 2.5 2.5 7L21 3z"/><path d="M10 13l4.5-4.5"/>',
+  air: '<path d="M2 12h20M16 6l6 6-6 6"/>',
+  bed: '<path d="M3 19V6M3 15h18v4M21 15v-3a3 3 0 00-3-3h-7v6"/><circle cx="7" cy="11.5" r="1.5"/>',
+  ext: '<path d="M14 5h5v5M19 5l-8 8M10 5H5v14h14v-5"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/>'
+};
+const ico = (n, s = 20) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]}</svg>`;
+document.getElementById('gear').innerHTML = ico('gear', 18);
+document.getElementById('prev').innerHTML = ico('left');
+document.getElementById('next').innerHTML = ico('right');
+document.getElementById('fab').innerHTML = ico('plus', 24);
+document.querySelector('[data-tab="ledger"]').innerHTML = ico('wallet', 18) + 'บัญชี';
+document.querySelector('[data-tab="trips"]').innerHTML = ico('plane', 18) + 'ทริป';
+
+/* ---------- ตัวช่วย ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const pad = n => String(n).padStart(2, '0');
+const ymd = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const enc = encodeURIComponent;
+const num = v => parseFloat(String(v ?? '').replace(/,/g, '')) || 0;
+const safeUrl = u => /^https?:\/\//i.test(u || '') ? u : '#';
+const baht = n => (n < 0 ? '−' : '') + '฿' + Math.abs(+n || 0).toLocaleString('th-TH', { maximumFractionDigits: 2 });
+const heroMoney = n => `<span class="cur">฿</span>${(+n || 0).toLocaleString('th-TH', { maximumFractionDigits: 2 })}`;
+const fmtD = d => d ? new Date(d + 'T00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }) : '';
+function money(n, cur) {
+  cur = cur || 'THB';
+  try { return (+n || 0).toLocaleString('th-TH', { style: 'currency', currency: cur, minimumFractionDigits: 0,
+    maximumFractionDigits: ['JPY','KRW','VND','LAK','TWD'].includes(cur) ? 0 : 2 }); }
+  catch (e) { return cur + ' ' + (+n || 0).toLocaleString(); }
+}
+/* ---------- เชื่อมต่อ Apps Script ---------- */
+const API = { url: '', key: '' };
+try { API.url = localStorage.getItem('ts_url') || ''; API.key = localStorage.getItem('ts_key') || ''; } catch (e) {}
+async function call(url, key, fn, args) {
+  let res;
+  try {
+    res = await fetch(url, { method: 'POST', redirect: 'follow',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ key, fn, args }) });
+  } catch (e) {
+    throw new Error('เชื่อมต่อไม่ได้ เช็คอินเทอร์เน็ต หรือตั้งค่า Apps Script ให้ "ทุกคน" เข้าถึงได้');
+  }
+  let j;
+  try { j = await res.json(); } catch (e) { throw new Error('Apps Script ตอบกลับผิดรูปแบบ เช็คว่าลิงก์ถูกและ Deploy เวอร์ชันล่าสุดแล้ว'); }
+  if (!j.ok) { const err = new Error(j.error || 'เกิดข้อผิดพลาด'); err.code = j.code; throw err; }
+  return j.data;
+}
+async function run(fn, ...args) {
+  try { return await call(API.url, API.key, fn, args); }
+  catch (e) { if (e.code === 'AUTH') showGate('รหัสลับไม่ถูกต้อง ใส่ใหม่อีกครั้ง'); throw e; }
+}
+function showGate(msg) {
+  $('#gUrl').value = API.url; $('#gKey').value = '';
+  $('#gMsg').textContent = msg || '';
+  $('#gate').hidden = false;
+}
+$('#gGo').onclick = async () => {
+  const url = $('#gUrl').value.trim(), key = $('#gKey').value;
+  if (!/^https:\/\/script\.google\.com\/.+\/exec/.test(url)) { $('#gMsg').textContent = 'ลิงก์ต้องขึ้นต้นด้วย https://script.google.com และลงท้ายด้วย /exec'; return; }
+  if (!key) { $('#gMsg').textContent = 'ใส่รหัสลับ'; return; }
+  const b = $('#gGo'); b.disabled = true; b.textContent = 'กำลังเชื่อมต่อ…'; $('#gMsg').textContent = '';
+  try {
+    await call(url, key, 'ping', []);
+    API.url = url; API.key = key;
+    try { localStorage.setItem('ts_url', url); localStorage.setItem('ts_key', key); } catch (e) {}
+    $('#gate').hidden = true; start();
+  } catch (e) { $('#gMsg').textContent = e.message; }
+  b.disabled = false; b.textContent = 'เชื่อมต่อ';
+};
+$('#gear').onclick = () => {
+  if (!confirm('ออกจากระบบบนเครื่องนี้?\nครั้งหน้าต้องใส่ลิงก์และรหัสลับใหม่ (ข้อมูลใน Google Sheet ไม่หาย)')) return;
+  API.key = '';
+  try { localStorage.removeItem('ts_key'); } catch (e) {}
+  showGate('');
+};
+
+/* ---------- หมวดที่เพิ่มเอง (เก็บใน Google Sheet ใช้ได้ทุกเครื่อง) ---------- */
+const S = { cats: {} };
+function catList(scope, base) {
+  const own = S.cats[scope] || {};
+  const extra = Object.keys(own).filter(c => !base.includes(c)).sort((a, b) => own[b] - own[a]);
+  return [...base.filter(c => c !== 'อื่นๆ'), ...extra, 'อื่นๆ'];
+}
+const isCustom = (scope, c) => !!(S.cats[scope] && c in S.cats[scope]);
+function saveCats() { run('saveSettings', 'cats', S.cats).catch(() => toast('บันทึกหมวดไม่สำเร็จ')); }
+function bumpCat(scope, base, c) {
+  if (!c || base.includes(c)) return;
+  const o = S.cats[scope] = S.cats[scope] || {};
+  o[c] = (o[c] || 0) + 1; saveCats();
+}
+function catChip(scope, c, on) {
+  return `<button type="button" class="chip${on ? ' on' : ''}" data-c="${esc(c)}" data-v="${esc(c)}"${isCustom(scope, c) ? ` data-custom data-scope="${esc(scope)}"` : ''}>${esc(c)}</button>`;
+}
+function catMenu(scope, name) {
+  const v = prompt(`แก้ชื่อหมวด "${name}"\nลบข้อความทั้งหมดแล้วกด OK = ลบหมวดนี้\n(รายการเก่ายังใช้ชื่อเดิม)`, name);
+  if (v === null) return;
+  const o = S.cats[scope] || {}, n = v.trim();
+  if (!n) { if (!confirm(`ลบปุ่มหมวด "${name}"?`)) return; delete o[name]; }
+  else if (n !== name) { o[n] = (o[n] || 0) + (o[name] || 0); delete o[name]; }
+  else return;
+  saveCats(); refreshCats(); toast(n ? 'เปลี่ยนชื่อแล้ว' : 'ลบหมวดแล้ว');
+}
+function refreshCats() {
+  renderChips();
+  const cp = $('#sheet .catpick');
+  if (cp) { const on = $('.on', cp)?.dataset.v; cp.innerHTML = catList(cp.dataset.scope, ECATS).map(c => catChip(cp.dataset.scope, c, c === on)).join(''); }
+}
+// กดค้างที่ปุ่มหมวดที่เพิ่มเอง เพื่อแก้ชื่อหรือลบ
+const LP = { t: 0, fired: false, x: 0, y: 0 };
+document.addEventListener('pointerdown', e => {
+  const c = e.target.closest('.chip[data-custom]'); if (!c) return;
+  LP.fired = false; LP.x = e.clientX; LP.y = e.clientY; clearTimeout(LP.t);
+  LP.t = setTimeout(() => { LP.fired = true; catMenu(c.dataset.scope, c.dataset.v); }, 550);
+});
+document.addEventListener('pointermove', e => { if (Math.abs(e.clientX - LP.x) + Math.abs(e.clientY - LP.y) > 10) clearTimeout(LP.t); });
+['pointerup', 'pointercancel'].forEach(t => document.addEventListener(t, () => clearTimeout(LP.t)));
+document.addEventListener('click', e => { if (LP.fired) { LP.fired = false; e.stopPropagation(); e.preventDefault(); } }, true);
+document.addEventListener('contextmenu', e => { if (e.target.closest('.chip[data-custom]')) e.preventDefault(); });
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2200);
+}
+const lockScroll = on => document.body.classList.toggle('lock', on);
+
+/* ---------- แท็บ ---------- */
+let tripsLoaded = false;
+$$('.tabbar button').forEach(b => b.onclick = () => {
+  $$('.tabbar button').forEach(x => x.classList.toggle('on', x === b));
+  $('#ledger').hidden = b.dataset.tab !== 'ledger';
+  $('#trips').hidden = b.dataset.tab !== 'trips';
+  if (b.dataset.tab === 'trips' && !tripsLoaded) { tripsLoaded = true; loadTrips(); }
+  window.scrollTo(0, 0);
+});
+
+/* =================================================
+   บัญชีส่วนตัว
+================================================= */
+const CATS = {
+  'รายจ่าย': ['อาหาร','กาแฟ/ขนม','น้ำมัน/เดินทาง','ช้อปปิ้ง','ค่าน้ำไฟ/บิล','โทรศัพท์/เน็ต','สุขภาพ','บันเทิง','ครอบครัว','ค่าใช้จ่ายบ้านเช่า','ท่องเที่ยว','อื่นๆ'],
+  'รายรับ':  ['เงินเดือน','ค่าเช่าบ้าน','ปันผล','ดอกเบี้ย','ขายของ','อื่นๆ']
+};
+const RENT = ['ค่าเช่าบ้าน', 'ค่าใช้จ่ายบ้านเช่า'];
+const L = { type: 'รายจ่าย', cat: null, rows: [], props: [] };
+const LM = new Date(); LM.setDate(1);
+const ym = d => d.getFullYear() + '-' + pad(d.getMonth() + 1);
+
+function openEntry() { $('#entryBg').classList.add('show'); lockScroll(true); $('#amt').focus(); }
+function closeEntry() { $('#entryBg').classList.remove('show'); lockScroll(false); }
+$('#fab').onclick = openEntry;
+$('#entryBg').addEventListener('click', e => { if (e.target.id === 'entryBg' || e.target.closest('[data-close]')) closeEntry(); });
+
+function setType(t) {
+  L.type = t; L.cat = null;
+  $('#bOut').classList.toggle('on', t === 'รายจ่าย');
+  $('#bIn').classList.toggle('on', t === 'รายรับ');
+  renderChips();
+}
+function renderChips() {
+  const list = catList(L.type, CATS[L.type]);
+  if (L.cat && !list.includes(L.cat)) L.cat = null;
+  $('#chips').innerHTML = list.map(c => catChip(L.type, c, c === L.cat)).join('');
+  $('#propRow').hidden = !RENT.includes(L.cat);
+  $('#otherRow').hidden = L.cat !== 'อื่นๆ';
+}
+function renderProps(select) {
+  const cur = select ?? $('#prop').value;
+  $('#prop').innerHTML = '<option value="">เลือกบ้านเช่า…</option>' + L.props.map(p =>
+    `<option value="${esc(p.name)}" ${p.name === cur ? 'selected' : ''}>${esc(p.name)}${p.location ? ' — ' + esc(p.location) : ''}</option>`).join('');
+}
+$('#chips').addEventListener('click', e => {
+  const b = e.target.closest('.chip'); if (!b) return;
+  L.cat = b.dataset.c; renderChips();
+  if (L.cat === 'อื่นๆ') $('#otherName').focus();
+});
+$('#bOut').onclick = () => setType('รายจ่าย');
+$('#bIn').onclick = () => setType('รายรับ');
+$('#addProp').onclick = () => openForm({
+  title: 'เพิ่มบ้านเช่า',
+  fields: [
+    { k: 'name', label: 'ชื่อเรียก', ph: 'เช่น บ้านเช่าหลังที่ 1, ห้องแถวตลาด' },
+    { k: 'location', label: 'ที่ตั้ง', ph: 'เช่น ต.ทะเลชุบศร อ.เมืองลพบุรี' },
+    { k: 'maps', label: 'ลิงก์ Google Maps (ถ้ามี)', type: 'url' },
+    { k: 'note', label: 'หมายเหตุ', type: 'textarea', ph: 'เช่น ผู้เช่า, ค่าเช่าต่อเดือน, วันครบสัญญา' }
+  ],
+  validate: o => !o.name && 'ใส่ชื่อบ้านเช่า',
+  onSave: async o => { await run('saveProp', o); L.props = await run('listProps'); renderProps(o.name); toast('เพิ่มบ้านเช่าแล้ว'); }
+});
+
+async function loadLedger() {
+  $('#mLabel').textContent = LM.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' });
+  $('#list').innerHTML = '<div class="empty">กำลังโหลด…</div>';
+  try { L.rows = await run('getMonth', ym(LM)); renderLedger(); }
+  catch (e) { $('#list').innerHTML = `<div class="empty">โหลดไม่สำเร็จ<br>${esc(e && e.message || e)}</div>`; }
+}
+function renderLedger() {
+  let tin = 0, tout = 0; const byCat = {}, rent = {};
+  L.rows.forEach(r => {
+    if (r.type === 'รายรับ') tin += r.amount;
+    else { tout += r.amount; byCat[r.category] = (byCat[r.category] || 0) + r.amount; }
+    if (r.property) {
+      const p = rent[r.property] = rent[r.property] || { in: 0, out: 0 };
+      r.type === 'รายรับ' ? p.in += r.amount : p.out += r.amount;
+    }
+  });
+  $('#tOut').innerHTML = heroMoney(tout);
+  $('#tIn').textContent = baht(tin);
+  $('#tBal').textContent = baht(tin - tout);
+  $('#tBal').className = 'num' + (tin - tout < 0 ? ' out' : '');
+
+  const cats = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
+  $('#catCard').hidden = !cats.length;
+  if (cats.length) {
+    const top = cats.slice(0, 4), rest = cats.slice(4).reduce((a, c) => a + c[1], 0);
+    const segs = rest ? [...top, ['หมวดอื่น', rest]] : top;
+    const OP = [1, .62, .4, .24, .13];
+    $('#stack').innerHTML = segs.map(([, v], i) => `<i style="flex:${v};opacity:${OP[i]}"></i>`).join('');
+    $('#cats').innerHTML = segs.map(([c, v], i) => `<div class="leg"><i style="opacity:${OP[i]}"></i><span>${esc(c)}</span>
+      <b class="num">${baht(v)}</b><em class="num">${Math.round(v / tout * 100)}%</em></div>`).join('');
+  }
+
+  const rk = Object.keys(rent);
+  $('#rentCard').hidden = !rk.length;
+  $('#rents').innerHTML = rk.map(k => { const net = rent[k].in - rent[k].out;
+    return `<div class="row"><div class="c"><div class="t">${esc(k)}</div><div class="s">รับ ${baht(rent[k].in)}  จ่าย ${baht(rent[k].out)}</div></div>
+    <div class="v num ${net >= 0 ? 'in' : 'out'}">${net >= 0 ? '+' : ''}${baht(net)}</div></div>`; }).join('');
+
+  if (!L.rows.length) { $('#list').innerHTML = '<div class="empty">ยังไม่มีรายการเดือนนี้<br>กดปุ่ม + เพื่อเริ่มบันทึก</div>'; return; }
+  const days = {};
+  L.rows.forEach(r => (days[r.date] = days[r.date] || []).push(r));
+  $('#list').innerHTML = Object.keys(days).map(d => {
+    const label = new Date(d + 'T00:00').toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'short' });
+    const net = days[d].reduce((s, r) => s + (r.type === 'รายรับ' ? r.amount : -r.amount), 0);
+    return `<div class="dh"><span>${label}</span><span class="num">${net > 0 ? '+' : ''}${baht(net)}</span></div>` +
+      days[d].map(r => `<div class="row">
+        <div class="c"><div class="t">${esc(r.category)}</div>
+          ${r.property || r.note ? `<div class="s">${esc([r.property, r.note].filter(Boolean).join('  ·  '))}</div>` : ''}</div>
+        <div class="v num ${r.type === 'รายรับ' ? 'in' : ''}">${r.type === 'รายรับ' ? '+' : '−'}฿${r.amount.toLocaleString('th-TH', { maximumFractionDigits: 2 })}</div>
+        <button class="del" data-id="${esc(r.id)}" aria-label="ลบ">${ico('x', 16)}</button></div>`).join('');
+  }).join('');
+}
+$('#list').addEventListener('click', async e => {
+  const b = e.target.closest('.del'); if (!b || !confirm('ลบรายการนี้?')) return;
+  b.disabled = true;
+  try { await run('deleteEntry', b.dataset.id); toast('ลบแล้ว'); loadLedger(); }
+  catch (err) { b.disabled = false; toast(err.message); }
+});
+$('#save').onclick = async () => {
+  const amount = num($('#amt').value);
+  if (!(amount > 0)) { toast('ใส่จำนวนเงินก่อน'); $('#amt').focus(); return; }
+  if (!L.cat) { toast('เลือกหมวดก่อน'); return; }
+  const property = RENT.includes(L.cat) ? $('#prop').value : '';
+  if (RENT.includes(L.cat) && !property) { toast('เลือกบ้านเช่าก่อน'); return; }
+  const date = $('#date').value || ymd(new Date());
+  const other = $('#otherName').value.trim().slice(0, 40);
+  const category = L.cat === 'อื่นๆ' && other ? other : L.cat;
+  const btn = $('#save'); btn.disabled = true; btn.textContent = 'กำลังบันทึก…';
+  try {
+    await run('addEntry', { type: L.type, category, amount, date, note: $('#note').value.trim(), property });
+    if (L.cat === 'อื่นๆ' && other || isCustom(L.type, category)) bumpCat(L.type, CATS[L.type], category);
+    $('#amt').value = ''; $('#note').value = ''; $('#otherName').value = ''; L.cat = null; renderChips();
+    closeEntry(); toast('บันทึกแล้ว');
+    const [y, m] = date.split('-').map(Number); LM.setFullYear(y, m - 1, 1);
+    loadLedger();
+  } catch (err) { toast(err.message); }
+  btn.disabled = false; btn.textContent = 'บันทึก';
+};
+$('#prev').onclick = () => { LM.setMonth(LM.getMonth() - 1); loadLedger(); };
+$('#next').onclick = () => { LM.setMonth(LM.getMonth() + 1); loadLedger(); };
+
+/* =================================================
+   ฟอร์มกลาง
+================================================= */
+let FORM = null;
+function openForm(cfg) {
+  FORM = cfg;
+  const d = cfg.data || {};
+  $('#sheet').innerHTML = `<div class="shh"><button data-act="fclose">ยกเลิก</button><b>${esc(cfg.title)}</b>
+    <button class="strong" data-act="fsave">บันทึก</button></div>
+    <div class="shb">${cfg.fields.map(f => fieldHTML(f, d[f.k])).join('')}
+    ${cfg.onDelete ? '<button class="danger" data-act="fdel">ลบรายการนี้</button>' : ''}</div>`;
+  if (cfg.fields.some(f => f.type === 'split')) renderSplit(d);
+  applyWhen(); updateFxHint();
+  fillThumbs($('#sheet'));
+  $('#sheetBg').classList.add('show'); lockScroll(true);
+}
+function closeForm() {
+  $('#sheetBg').classList.remove('show'); FORM = null;
+  if (!$('#entryBg').classList.contains('show')) lockScroll(false);
+}
+const opts = a => a.map(o => Array.isArray(o) ? o : [o, o]);
+// ช่องที่แสดงเฉพาะบางกรณี เช่น ยอดบาทจริง เฉพาะตอนจ่ายด้วยบัตรเครดิต
+function fieldHTML(f, v) {
+  const h = fieldInner(f, v);
+  return f.when ? `<div class="when" data-wk="${f.when[0]}" data-wv="${esc(f.when[1])}">${h}</div>` : h;
+}
+function formVal(k) {
+  const root = $('#sheet'), seg = $(`.seg[data-k="${k}"] .on`, root);
+  if (seg) return seg.dataset.v;
+  const el = root.querySelector(`[name="${k}"]`); return el ? el.value : '';
+}
+function applyWhen() { $$('#sheet .when').forEach(w => w.hidden = !w.dataset.wv.split('|').includes(formVal(w.dataset.wk))); }
+function fieldInner(f, v) {
+  const val = v ?? f.def ?? '';
+  const lab = f.label ? `<label class="fl">${esc(f.label)}</label>` : '';
+  const ph = f.ph ? ` placeholder="${esc(f.ph)}"` : '';
+  switch (f.type) {
+    case 'seg': {
+      const cur = val || f.options[0];
+      return `<div class="fld">${lab}<div class="seg" data-k="${f.k}">${f.options.map(o =>
+        `<button type="button" data-v="${esc(o)}" class="${o === cur ? 'on' : ''}">${esc(o)}</button>`).join('')}</div></div>`;
+    }
+    case 'select':
+      return `<div class="fld">${lab}<select name="${f.k}">${opts(f.options).map(([k, l]) =>
+        `<option value="${esc(k)}" ${String(k) === String(val) ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></div>`;
+    case 'checks': {
+      const sel = Array.isArray(val) && val.length ? val : f.options;
+      return `<div class="fld">${lab}<div class="checks" data-k="${f.k}">${f.options.map(o =>
+        `<button type="button" class="chip ${sel.includes(o) ? 'on' : ''}" data-v="${esc(o)}">${esc(o)}</button>`).join('')}</div></div>`;
+    }
+    case 'textarea': return `<div class="fld">${lab}<textarea name="${f.k}"${ph}>${esc(val)}</textarea></div>`;
+    case 'photo':
+      return `<div class="fld">${lab}<div class="ph" data-k="${f.k}" data-v="${esc(val)}">
+        <div class="phimg">${val && T.thumbs[val] ? `<img data-thumb="${esc(val)}">` : ''}</div>
+        <label class="phbtn">${ico('camera', 18)}${val ? 'เปลี่ยนรูป' : 'เลือกรูป'}<input type="file" accept="image/*" hidden></label>
+        ${val ? '<button type="button" class="ghost" data-act="phclear">เอารูปออก</button>' : ''}</div></div>`;
+    case 'maps':
+      return `<div class="fld">${lab}<div class="mrow"><input name="${f.k}" type="url" value="${esc(val)}" placeholder="วางลิงก์จาก Google Maps">
+        <button type="button" data-act="fetchName" data-target="${f.target}">ดึงชื่อ</button></div></div>`;
+    case 'split': return '<div class="fld" id="split"></div>';
+    case 'catchips': {
+      const list = catList(f.scope, f.base), cur = val || f.base[0];
+      if (!list.includes(cur)) list.splice(list.length - 1, 0, cur);
+      return `<div class="fld">${lab}<div class="catpick" data-k="${f.k}" data-scope="${esc(f.scope)}">${list.map(c => catChip(f.scope, c, c === cur)).join('')}</div>
+        <div class="othbox" ${cur === 'อื่นๆ' ? '' : 'hidden'}><input class="othr" name="__other" placeholder="ค่าอะไร? เช่น ซักผ้า (ไม่ใส่ก็ได้)" autocomplete="off">
+        <div class="tiny">ชื่อที่พิมพ์จะกลายเป็นปุ่มหมวดใหม่ (กดค้างที่ปุ่มเพื่อแก้หรือลบ)</div></div></div>`;
+    }
+    case 'money':
+      return `<div class="fld">${lab}<input name="${f.k}" inputmode="decimal" value="${val === '' || val === 0 ? '' : esc(val)}" placeholder="0"><div class="hint num" id="fxHint"></div></div>`;
+    case 'number':
+      return `<div class="fld">${lab}<input name="${f.k}" inputmode="decimal" value="${val === '' || val === 0 ? '' : esc(val)}"${ph || ' placeholder="0"'}></div>`;
+    default:
+      return `<div class="fld">${lab}<input name="${f.k}" type="${f.type || 'text'}" value="${esc(val)}"${ph} autocomplete="off"></div>`;
+  }
+}
+function readForm() {
+  const o = { ...(FORM.data || {}) }, root = $('#sheet');
+  FORM.fields.forEach(f => {
+    if (f.type === 'seg') o[f.k] = $(`.seg[data-k="${f.k}"] .on`, root)?.dataset.v || '';
+    else if (f.type === 'checks') o[f.k] = $$(`.checks[data-k="${f.k}"] .on`, root).map(b => b.dataset.v);
+    else if (f.type === 'photo') o[f.k] = $(`.ph[data-k="${f.k}"]`, root).dataset.v || '';
+    else if (f.type === 'split') Object.assign(o, readSplit());
+    else if (f.type === 'catchips') {
+      const sel = $(`.catpick[data-k="${f.k}"] .on`, root)?.dataset.v || 'อื่นๆ';
+      const other = (root.querySelector('[name="__other"]')?.value || '').trim().slice(0, 40);
+      o[f.k] = sel === 'อื่นๆ' && other ? other : sel;
+    }
+    else if (f.type === 'money') o[f.k] = num(root.querySelector(`[name="${f.k}"]`).value);
+    else { const el = root.querySelector(`[name="${f.k}"]`); if (el) o[f.k] = f.type === 'number' ? num(el.value) : el.value.trim(); }
+  });
+  return o;
+}
+$('#sheet').addEventListener('click', async e => {
+  const segB = e.target.closest('.seg[data-k] button');
+  if (segB) { $$('button', segB.parentNode).forEach(b => b.classList.toggle('on', b === segB)); applyWhen(); return; }
+  const cp = e.target.closest('.catpick .chip');
+  if (cp) {
+    $$('.chip', cp.parentNode).forEach(x => x.classList.toggle('on', x === cp));
+    const ob = $('.othbox', cp.closest('.fld')); ob.hidden = cp.dataset.v !== 'อื่นๆ';
+    if (!ob.hidden) $('input', ob).focus();
+    return;
+  }
+  const chip = e.target.closest('.checks .chip');
+  if (chip) { chip.classList.toggle('on'); updateSplitHint(); return; }
+  const sm = e.target.closest('#splitMode button');
+  if (sm) { const cur = readSplit(); $$('#splitMode button').forEach(b => b.classList.toggle('on', b === sm)); drawSplitBody(sm.dataset.m, cur); return; }
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const act = b.dataset.act;
+  if (act === 'fclose') closeForm();
+  else if (act === 'fsave') {
+    const o = readForm();
+    const err = FORM.validate && FORM.validate(o);
+    if (err) return toast(err);
+    b.disabled = true; b.textContent = 'รอสักครู่';
+    try { await FORM.onSave(o); closeForm(); }
+    catch (x) { toast(x.message || 'บันทึกไม่สำเร็จ'); b.disabled = false; b.textContent = 'บันทึก'; }
+  }
+  else if (act === 'fdel') { try { if (await FORM.onDelete() !== false) closeForm(); } catch (x) { toast(x.message); } }
+  else if (act === 'phclear') { const box = b.closest('.ph'); box.dataset.v = ''; $('.phimg', box).innerHTML = ''; b.remove(); }
+  else if (act === 'fetchName') {
+    const url = b.parentNode.querySelector('input').value.trim();
+    if (!url) return toast('วางลิงก์ก่อน');
+    b.disabled = true; b.textContent = 'กำลังดึง…';
+    try {
+      const r = await run('resolvePlace', url);
+      if (r.name) { $(`[name="${b.dataset.target}"]`).value = r.name; toast('ได้ชื่อแล้ว แก้ไขเพิ่มได้'); }
+      else toast('ดึงชื่อไม่ได้ พิมพ์ชื่อเองได้เลย');
+    } catch (x) { toast('ดึงชื่อไม่ได้ พิมพ์ชื่อเองได้เลย'); }
+    b.disabled = false; b.textContent = 'ดึงชื่อ';
+  }
+});
+$('#sheet').addEventListener('input', e => {
+  if (e.target.name === 'amount' || e.target.name === 'cost' || e.target.dataset.p !== undefined) updateSplitHint();
+  if (['amount', 'cost', 'thbActual'].includes(e.target.name)) updateFxHint();
+});
+$('#sheet').addEventListener('change', e => {
+  if (e.target.type === 'file') handlePhoto(e.target);
+  if (e.target.tagName === 'SELECT') { applyWhen(); updateFxHint(); updateSplitHint(); }
+});
+// แสดงยอดเงินบาทใต้ช่องจำนวนเงิน
+function updateFxHint() {
+  const h = $('#fxHint'); if (!h || !FORM || !T.id || !isFx()) { if (h) h.textContent = ''; return; }
+  const amt = num($('#sheet [name="amount"], #sheet [name="cost"]')?.value);
+  const e = { amount: amt, method: formVal('method'), thbActual: num(formVal('thbActual')), id: FORM.data && FORM.data.id,
+    rate: FORM.data && FORM.data.rate || (T.rateCur === trip().currency ? T.rateToday : 0) };
+  const r = rateInfo(e);
+  h.textContent = !r.rate ? 'กำลังดึงเรทวันนี้…' : e.thbActual > 0 ? `ยอดบาทจริง ${baht(e.thbActual)}` :
+    `≈ ${baht(amt * r.rate)}  (${r.src} 1 = ${fmtRate(r.rate)} บาท)`;
+}
+$('#sheetBg').addEventListener('click', e => { if (e.target.id === 'sheetBg') closeForm(); });
+
+/* ---------- รูป ---------- */
+function loadImg(file) {
+  return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('เปิดรูปไม่ได้')); i.setAttribute('s' + 'rc', URL.createObjectURL(file)); });
+}
+function toJpeg(img, max, q) {
+  const s = Math.min(1, max / Math.max(img.width, img.height));
+  const c = document.createElement('canvas');
+  c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+  c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+  return c.toDataURL('image/jpeg', q);
+}
+async function handlePhoto(input) {
+  const file = input.files[0]; if (!file) return;
+  const box = input.closest('.ph'); box.classList.add('busy');
+  try {
+    const img = await loadImg(file);
+    const full = toJpeg(img, 1800, .85);
+    let q = .7, thumb;
+    do { thumb = toJpeg(img, 360, q); q -= .1; } while (thumb.length > 45000 && q > .2);
+    const r = await run('savePhoto', T.id || '', thumb, full, file.name || 'photo.jpg');
+    T.thumbs[r.id] = thumb;
+    box.dataset.v = r.id; $('.phimg', box).innerHTML = `<img data-thumb="${esc(r.id)}">`; fillThumbs(box);
+    toast('อัปโหลดรูปแล้ว');
+  } catch (e) { toast('อัปโหลดรูปไม่สำเร็จ'); }
+  box.classList.remove('busy'); input.value = '';
+}
+async function viewPhoto(id) {
+  const v = $('#viewer');
+  v.innerHTML = `<img data-thumb="${esc(id)}"><div class="vh">กำลังโหลดรูปเต็ม · แตะเพื่อปิด</div>`; fillThumbs(v);
+  v.classList.add('show');
+  try { const full = await run('getPhoto', id); if (v.classList.contains('show')) { const im = $('img', v); if (im) im.setAttribute('s' + 'rc', full); const h = $('.vh', v); if (h) h.textContent = 'แตะเพื่อปิด'; } }
+  catch (e) { const h = $('.vh', v); if (h) h.textContent = 'โหลดรูปเต็มไม่ได้'; }
+}
+$('#viewer').onclick = () => $('#viewer').classList.remove('show');
+const thumb = id => id && T.thumbs[id] ? `<img class="th" data-thumb="${esc(id)}" data-act="view" data-id="${esc(id)}" alt="">` : '';
+function fillThumbs(root) { $$('img[data-thumb]', root || document).forEach(im => { const t = T.thumbs[im.dataset.thumb]; if (t && im.getAttribute('s' + 'rc') !== t) im.setAttribute('s' + 'rc', t); }); }
+const extLink = (href, icon, text) => `<a class="ghost" target="_blank" rel="noopener" href="${esc(href)}">${ico(icon, 16)}${text}</a>`;
+
+/* =================================================
+   ทริป
+================================================= */
+const T = { list: [], id: null, recs: [], thumbs: {}, sub: 'overview', day: 0 };
+const CURS = [['JPY','JPY เยนญี่ปุ่น'],['KRW','KRW วอนเกาหลี'],['CNY','CNY หยวนจีน'],['TWD','TWD ดอลลาร์ไต้หวัน'],['HKD','HKD ดอลลาร์ฮ่องกง'],
+  ['SGD','SGD ดอลลาร์สิงคโปร์'],['MYR','MYR ริงกิตมาเลเซีย'],['VND','VND ดองเวียดนาม'],['LAK','LAK กีบลาว'],['USD','USD ดอลลาร์สหรัฐ'],
+  ['EUR','EUR ยูโร'],['GBP','GBP ปอนด์'],['AUD','AUD ดอลลาร์ออสเตรเลีย'],['CHF','CHF ฟรังก์สวิส'],['THB','THB บาท']];
+const METHODS = ['เงินสด','บัตรเครดิต','Travel card','โอน/QR'];
+const MODES = ['🚶 เดิน','🚌 รถเมล์','🚆 รถไฟ','🚇 รถไฟใต้ดิน','🚄 ชินคันเซ็น/รถไฟความเร็วสูง','🚕 แท็กซี่','🚗 รถเช่า/รถส่วนตัว','⛴ เรือ','✈️ เครื่องบิน','อื่นๆ'];
+const ECATS = ['อาหาร','เดินทาง','ที่พัก','ตั๋ว/กิจกรรม','ช้อปปิ้ง','ของฝาก','อื่นๆ'];
+
+const trip = () => T.recs.find(r => r.kind === 'trip');
+const of = k => T.recs.filter(r => r.kind === k);
+const rec = id => T.recs.find(r => r.id === id);
+const byTime = (a, b) => (a.time || '99').localeCompare(b.time || '99');
+function upsert(r) { const i = T.recs.findIndex(x => x.id === r.id); i >= 0 ? T.recs[i] = r : T.recs.push(r); }
+function tripDays(t) {
+  const out = []; if (!t || !t.start || !t.end) return out;
+  const d = new Date(t.start + 'T00:00'), e = new Date(t.end + 'T00:00');
+  while (d <= e && out.length < 90) { out.push(ymd(d)); d.setDate(d.getDate() + 1); }
+  return out;
+}
+const dayOpts = () => tripDays(trip()).map((d, i) => [d, `Day ${i + 1} — ${fmtD(d)}`]);
+const curDay = () => tripDays(trip())[T.day] || trip().start;
+const tm = n => money(n, trip().currency);
+
+/* ----- แปลงเป็นเงินบาท -----
+   เงินสด = เรทเฉลี่ยที่แลกมา, Travel card = เรทที่เติม, บัตรเครดิต/โอน = เรทวันที่บันทึก จนกว่าจะใส่ยอดบาทจริงจากบิล */
+const isFx = () => { const t = trip(); return !!t && !!t.currency && t.currency !== 'THB'; };
+function walletRate(w) {
+  const xs = of('topup').filter(x => x.wallet === w && x.amount > 0 && +x.thb > 0);
+  const a = xs.reduce((s, x) => s + x.amount, 0);
+  return a ? xs.reduce((s, x) => s + +x.thb, 0) / a : 0;
+}
+function rateInfo(e) {
+  const t = trip();
+  if (!isFx()) return { rate: 1, src: '' };
+  if (+e.thbActual > 0 && e.amount > 0) return { rate: e.thbActual / e.amount, src: 'ยอดจริงจากบิล' };
+  if (e.method === 'เงินสด' && walletRate('เงินสด')) return { rate: walletRate('เงินสด'), src: 'เรทเฉลี่ยที่แลกเงินสดมา' };
+  if (e.method === 'Travel card' && walletRate('Travel card')) return { rate: walletRate('Travel card'), src: 'เรทที่เติม Travel card' };
+  if (e.rate) return { rate: e.rate, src: e.id ? 'เรทวันที่บันทึก' : 'เรทวันนี้' };
+  return { rate: +t.rate || 0, src: 'เรทประมาณของทริป' };
+}
+const thbOf = e => isFx() ? e.amount * rateInfo(e).rate : e.amount;
+const estimated = e => isFx() && e.method === 'บัตรเครดิต' && !(+e.thbActual > 0);
+const fmtRate = r => r >= 1 ? r.toFixed(2) : r >= 0.01 ? r.toFixed(4) : r.toFixed(6);
+function ensureRate() {
+  const cur = trip().currency;
+  if (!isFx() || T.rateCur === cur) return;
+  run('getRate', cur).then(r => { T.rateToday = r.rate; T.rateCur = cur; updateFxHint(); }).catch(() => {});
+}
+function stampRate(o) { if (isFx() && !o.rate) o.rate = T.rateCur === trip().currency && T.rateToday || +trip().rate || 0; }
+function tripStatus(t) {
+  const today = ymd(new Date());
+  if (t.start > today) return ['soon', `อีก ${Math.round((new Date(t.start) - new Date(today)) / 864e5)} วัน`];
+  return t.end >= today ? ['now', 'กำลังเที่ยว'] : ['', 'จบแล้ว'];
+}
+
+async function loadTrips() {
+  $('#trips').innerHTML = '<div class="empty">กำลังโหลด…</div>';
+  try { T.list = await run('listTrips'); renderTrips(); }
+  catch (e) {
+    $('#trips').innerHTML = `<div class="block"><div class="empty">โหลดหน้าทริปไม่สำเร็จ<br>${esc(e && e.message || e)}</div>
+      <button class="btn" data-act="retry">ลองใหม่</button></div>`;
+  }
+}
+async function openTrip(id) {
+  T.id = id; T.recs = []; T.sub = 'overview'; T.day = 0; T.who = ''; T.catAll = false;
+  $('#trips').innerHTML = '<div class="empty">กำลังเปิดทริป…</div>';
+  try {
+    const r = await run('getTrip', id);
+    T.recs = r.recs; T.thumbs = r.thumbs;
+    const i = tripDays(trip()).indexOf(ymd(new Date()));
+    if (i >= 0) { T.day = i; T.sub = 'plan'; }
+    renderTrips(); window.scrollTo(0, 0);
+  } catch (e) { toast(e.message); T.id = null; loadTrips(); }
+}
+function saver(kind) {
+  return async o => { o.kind = kind; o.tripId = T.id; upsert(await run('saveRec', o)); renderTrips(); toast('บันทึกแล้ว'); };
+}
+function deleter(id) {
+  return async () => { if (!confirm('ลบรายการนี้?')) return false; await run('deleteRec', id); T.recs = T.recs.filter(r => r.id !== id); renderTrips(); toast('ลบแล้ว'); };
+}
+
+function renderTrips() {
+  const el = $('#trips');
+  if (!T.id) {
+    el.innerHTML = `<header class="top"><h1>ทริป</h1><button class="ghost" style="background:var(--surface)" data-act="newTrip">${ico('plus', 16)}ทริปใหม่</button></header>` +
+      (T.list.length ? T.list.map(t => { const [cls, txt] = tripStatus(t);
+        return `<button class="trip" data-act="openTrip" data-id="${esc(t.id)}">
+          <div class="n">${esc(t.name)}</div>
+          <div class="m">${esc([t.dest, t.scope].filter(Boolean).join(', '))}</div>
+          <div class="m">${fmtD(t.start)} – ${fmtD(t.end)}  (${tripDays(t).length} วัน)</div>
+          <span class="pill ${cls}">${txt}</span></button>`; }).join('')
+        : '<div class="block empty">ยังไม่มีทริป<br>กด "ทริปใหม่" เพื่อเริ่มวางแผน</div>');
+    return;
+  }
+  const t = trip(); if (!t) return;
+  const subs = [['overview','ภาพรวม'],['plan','แผนรายวัน'],['money','ค่าใช้จ่าย'],['wallet','กระเป๋าเงิน']];
+  el.innerHTML = `<div class="thead"><button class="ib" data-act="back" aria-label="กลับ">${ico('left')}</button>
+      <div class="mid"><h1>${esc(t.name)}</h1><div class="m">${fmtD(t.start)} – ${fmtD(t.end)}, ${tripDays(t).length} วัน</div>
+      <div class="m">${esc(t.members.join(', '))}</div></div>
+      <button class="ib" data-act="editTrip" aria-label="แก้ไขทริป">${ico('edit', 18)}</button></div>
+    <nav class="tabs">${subs.map(([k, l]) => `<button data-act="sub" data-s="${k}" class="${T.sub === k ? 'on' : ''}">${l}</button>`).join('')}</nav>
+    ${({ overview: viewOverview, plan: viewPlan, money: viewMoney, wallet: viewWallet })[T.sub](t)}`;
+  fillThumbs(el);
+}
+
+/* ----- ภาพรวม ----- */
+const nights = s => s.checkin && s.checkout ? Math.max(0, Math.round((new Date(s.checkout) - new Date(s.checkin)) / 864e5)) : 0;
+function viewOverview(t) {
+  const fl = of('flight').sort((a, b) => ((a.date || '') + (a.dep || '')).localeCompare((b.date || '') + (b.dep || '')));
+  const st = of('stay').sort((a, b) => (a.checkin || '').localeCompare(b.checkin || ''));
+  const pre = fl.reduce((a, f) => a + (+f.price || 0), 0) + st.reduce((a, s) => a + (+s.price || 0), 0);
+  const okF = s => s === 'ซื้อตั๋วแล้ว' || s === 'เช็คอินแล้ว';
+  return `
+  <div class="block"><div class="bh"><h2>เที่ยวบิน</h2><button class="link" data-act="addFlight">${ico('plus', 16)}เพิ่ม</button></div>
+  ${fl.length ? fl.map(f => `<div class="ticket tap" data-act="editFlight" data-id="${esc(f.id)}">
+      <div class="tk-top"><span>${esc(f.dir)}  ${fmtD(f.date)}</span><span class="pill ${okF(f.status) ? 'ok' : 'no'}">${esc(f.status)}</span></div>
+      <div class="tk-route"><div><b>${esc(f.from || '—')}</b><small>${esc(f.dep || '')}</small></div>
+        <div class="tk-line">${ico('air', 18)}</div>
+        <div class="r"><b>${esc(f.to || '—')}</b><small>${esc(f.arr || '')}</small></div></div>
+      <div class="meta">${[f.flightNo, f.airline, f.ref && 'รหัสจอง ' + f.ref, f.seat && 'ที่นั่ง ' + f.seat].filter(Boolean).map(x => `<span>${esc(x)}</span>`).join('')}</div>
+      ${f.note ? `<div class="nt">${esc(f.note)}</div>` : ''}
+      ${f.pass || f.flightNo ? `<div class="acts">${thumb(f.pass)}
+        ${f.flightNo ? extLink('https://www.google.com/search?q=' + enc(f.flightNo + ' flight status'), 'ext', 'สถานะเที่ยวบิน') : ''}</div>` : ''}
+    </div>`).join('') : '<div class="empty">ยังไม่มีเที่ยวบิน<br>ถ้าเดินทางด้วยรถ ข้ามส่วนนี้ได้</div>'}
+  </div>
+  <div class="block"><div class="bh"><h2>ที่พัก</h2><button class="link" data-act="addStay">${ico('plus', 16)}เพิ่ม</button></div>
+  ${st.length ? st.map(s => `<div class="ticket tap" data-act="editStay" data-id="${esc(s.id)}">
+      <div class="tk-top"><span>${fmtD(s.checkin)} – ${fmtD(s.checkout)}, ${nights(s)} คืน</span><span class="pill ${s.status === 'จองแล้ว' ? 'ok' : 'no'}">${esc(s.status)}</span></div>
+      <div class="tt" style="margin-top:4px">${esc(s.name || 'ที่พัก')}</div>
+      ${s.price ? `<div class="meta"><span>${baht(s.price)}</span></div>` : ''}
+      ${s.note ? `<div class="nt">${esc(s.note)}</div>` : ''}
+      ${s.photo || s.maps ? `<div class="acts">${thumb(s.photo)}${s.maps ? extLink(safeUrl(s.maps), 'pin', 'แผนที่') : ''}</div>` : ''}
+    </div>`).join('') : '<div class="empty">ยังไม่มีที่พัก</div>'}
+  </div>
+  <div class="block"><h2>สรุป</h2><div class="kv">
+    <span>ตั๋วและที่พักที่จองไว้</span><b class="num">${baht(pre)}</b>
+    <span>ค่าใช้จ่ายระหว่างทริป</span><b class="num">${tm(expenseItems().reduce((a, e) => a + e.amount, 0))}</b>
+    ${isFx() ? `<span>คิดเป็นเงินบาท</span><b class="num">≈ ${baht(expenseItems().reduce((a, e) => a + thbOf(e), 0))}</b>
+    <span>สกุลเงิน</span><b>${esc(t.currency)}, เรทประมาณ 1 = ${fmtRate(+t.rate || 0)} บาท</b>` : ''}</div></div>`;
+}
+
+/* ----- แผนรายวัน ----- */
+function stopName(s) { return s.myName || s.name || 'สถานที่'; }
+function viewPlan(t) {
+  const days = tripDays(t);
+  if (!days.length) return '<div class="block empty">ตั้งวันเริ่มและวันจบทริปก่อน</div>';
+  T.day = Math.min(T.day, days.length - 1);
+  const d = days[T.day];
+  const items = [...of('stop'), ...of('leg')].filter(r => r.date === d).sort(byTime);
+  const fls = of('flight').filter(f => f.date === d);
+  const stay = of('stay').find(s => s.checkin <= d && d < s.checkout);
+  let prev = null;
+  const tl = items.map(r => {
+    if (r.kind === 'leg') return `<div class="tli leg tap" data-act="editLeg" data-id="${esc(r.id)}">
+      <div class="tm">${esc(r.time || '')}</div><div class="dot"></div>
+      <div><div class="tt">${esc(r.mode || 'เดินทาง')}</div>
+        <div class="tr">${esc(r.from || '?')} → ${esc(r.to || '?')}</div>
+        ${r.line ? `<div class="sub">${esc(r.line)}</div>` : ''}${r.note ? `<div class="nt">${esc(r.note)}</div>` : ''}
+        ${r.cost > 0 ? `<div class="cost">${tm(r.cost)}  ${esc(r.method)}, ${esc(r.payer)} จ่าย</div>` : ''}</div></div>`;
+    const q = r.name || r.myName;
+    const dir = prev ? `https://www.google.com/maps/dir/?api=1&origin=${enc(prev.name || prev.myName)}&destination=${enc(q)}&travelmode=transit` : '';
+    prev = r;
+    return `<div class="tli tap" data-act="editStop" data-id="${esc(r.id)}">
+      <div class="tm">${esc(r.time || '')}</div><div class="dot"></div>
+      <div><div class="tt">${esc(stopName(r))}</div>
+        ${r.myName && r.name && r.myName !== r.name ? `<div class="sub">${esc(r.name)}</div>` : ''}
+        ${r.note ? `<div class="nt">${esc(r.note)}</div>` : ''}
+        <div class="acts">${thumb(r.photo)}
+          ${extLink(r.maps ? safeUrl(r.maps) : 'https://www.google.com/maps/search/?api=1&query=' + enc(q), 'pin', 'แผนที่')}
+          ${dir ? extLink(dir, 'route', 'เส้นทาง') : ''}</div></div></div>`;
+  }).join('');
+  return `<div class="days">${days.map((x, i) => `<button class="${i === T.day ? 'on' : ''}" data-act="day" data-i="${i}"><b>Day ${i + 1}</b><span>${fmtD(x)}</span></button>`).join('')}</div>
+    ${fls.map(f => `<div class="banner">${ico('plane', 16)}${esc(f.dir)} ${esc(f.flightNo || '')} ${esc(f.dep || '')}  ${esc(f.from || '')} → ${esc(f.to || '')}</div>`).join('')}
+    <div class="block"><div class="tl">${tl || '<div class="empty">ยังไม่มีแผนวันนี้<br>เริ่มจากเพิ่มสถานที่แรก</div>'}</div>
+      <div class="pair"><button class="ghost" data-act="addStop">${ico('pin', 16)}สถานที่</button><button class="ghost" data-act="addLeg">${ico('route', 16)}การเดินทาง</button></div></div>
+    ${stay ? `<div class="banner">${ico('bed', 16)}คืนนี้พักที่ ${esc(stay.name)}</div>` : ''}`;
+}
+
+/* ----- ค่าใช้จ่าย & หารเงิน ----- */
+function expenseItems() {
+  const t = trip();
+  const legs = of('leg').filter(l => l.cost > 0).map(l => ({ id: l.id, origin: 'leg', title: `${l.mode || 'เดินทาง'} ${l.from || ''} → ${l.to || ''}`,
+    date: l.date, amount: l.cost, payer: l.payer || t.members[0], method: l.method || 'เงินสด', mode: 'equal',
+    members: l.members && l.members.length ? l.members : t.members, category: 'เดินทาง', rate: l.rate, thbActual: l.thbActual }));
+  return [...of('exp').map(e => Object.assign({}, e, { origin: 'exp' })), ...legs];
+}
+function shares(e) {
+  if (e.mode === 'custom') return e.parts || {};
+  if (e.mode === 'self') return { [e.payer]: e.amount };
+  const m = e.members && e.members.length ? e.members : trip().members, o = {};
+  m.forEach(n => o[n] = e.amount / m.length);
+  return o;
+}
+// ยอดคืนเงินเป็นเงินบาท
+function settleThb(s) {
+  const t = trip(), cur = s.cur || t.currency;
+  if (cur === 'THB') return s.amount;
+  return s.amount * (s.method === 'เงินสด' && walletRate('เงินสด') || +t.rate || 0);
+}
+function balances() { // ทุกยอดเป็นเงินบาท
+  const bal = {}, paid = {}, used = {};
+  trip().members.forEach(m => { bal[m] = 0; paid[m] = 0; used[m] = 0; });
+  expenseItems().forEach(e => {
+    const thb = thbOf(e), k = e.amount ? thb / e.amount : 0;
+    paid[e.payer] = (paid[e.payer] || 0) + thb; bal[e.payer] = (bal[e.payer] || 0) + thb;
+    const s = shares(e); for (const n in s) { used[n] = (used[n] || 0) + s[n] * k; bal[n] = (bal[n] || 0) - s[n] * k; }
+  });
+  of('settle').forEach(s => { const v = settleThb(s); bal[s.from] = (bal[s.from] || 0) + v; bal[s.to] = (bal[s.to] || 0) - v; });
+  return { bal, paid, used };
+}
+// สรุปตามหมวด ทั้งทริป หรือเฉพาะส่วนของคนหนึ่ง: [หมวด, ยอดสกุลทริป, ยอดบาท]
+function catStats(person) {
+  const m = {};
+  expenseItems().forEach(e => {
+    const f = !person ? 1 : e.amount ? (shares(e)[person] || 0) / e.amount : 0;
+    if (!f) return;
+    const x = m[e.category || 'อื่นๆ'] = m[e.category || 'อื่นๆ'] || [0, 0];
+    x[0] += e.amount * f; x[1] += thbOf(e) * f;
+  });
+  return Object.entries(m).map(([c, [a, b]]) => [c, a, b]).sort((p, q) => q[2] - p[2] || q[1] - p[1]);
+}
+function catBlock(t) {
+  const who = t.members.includes(T.who) ? T.who : '';
+  const rows = catStats(who);
+  const fx = rows.reduce((a, r) => a + r[1], 0), thb = rows.reduce((a, r) => a + r[2], 0);
+  const pick = t.members.length > 1 ? `<div class="pick">${['', ...t.members].map(m =>
+    `<button class="chip${m === who ? ' on' : ''}" data-act="who" data-v="${esc(m)}">${m ? esc(m) : 'ทั้งทริป'}</button>`).join('')}</div>` : '';
+  if (!rows.length) return `<div class="block"><h2>ใช้จ่ายไปกับอะไร</h2>${pick}<div class="empty">ยังไม่มีค่าใช้จ่าย${who ? 'ของ' + esc(who) : ''}</div></div>`;
+  const fold = rows.length > 6 && !T.catAll;
+  const shown = fold ? rows.slice(0, 5) : rows, rest = fold ? rows.slice(5) : [];
+  const restFx = rest.reduce((a, r) => a + r[1], 0), restThb = rest.reduce((a, r) => a + r[2], 0);
+  const OP = [1, .75, .56, .42, .31, .23, .17, .13, .1];
+  const op = i => OP[Math.min(i, OP.length - 1)];
+  const pct = v => thb ? Math.round(v / thb * 100) : 0;
+  const segs = [...shown.map((r, i) => [r[2], op(i)]), ...(rest.length ? [[restThb, .1]] : [])];
+  return `<div class="block"><h2>ใช้จ่ายไปกับอะไร</h2>${pick}
+    <div class="ctot"><b class="num">${tm(fx)}</b>${isFx() ? `<span class="num">≈ ${baht(thb)}</span>` : ''}</div>
+    <div class="stack">${segs.map(([v, o]) => `<i style="flex:${Math.max(v, 0.0001)};opacity:${o}"></i>`).join('')}</div>
+    ${shown.map((r, i) => `<div class="leg"><i style="opacity:${op(i)}"></i><span>${esc(r[0])}</span>
+      <b class="num">${tm(r[1])}</b><em class="num">${pct(r[2])}%</em></div>`).join('')}
+    ${rest.length ? `<button class="leg" data-act="catAll"><i style="opacity:.1"></i><span>อีก ${rest.length} หมวด</span>
+      <b class="num">${tm(restFx)}</b><em class="num">${pct(restThb)}%</em></button>` : ''}
+    ${rows.length > 6 && T.catAll ? '<button class="link" style="margin-top:6px" data-act="catAll">ย่อ</button>' : ''}</div>`;
+}
+function suggestPay(bal) {
+  const cr = [], db = [];
+  for (const n in bal) { const v = Math.round(bal[n] * 100) / 100; if (v > 0.009) cr.push([n, v]); else if (v < -0.009) db.push([n, -v]); }
+  cr.sort((a, b) => b[1] - a[1]); db.sort((a, b) => b[1] - a[1]);
+  const out = []; let i = 0, j = 0;
+  while (i < db.length && j < cr.length) {
+    const x = Math.min(db[i][1], cr[j][1]);
+    out.push({ from: db[i][0], to: cr[j][0], amount: Math.round(x * 100) / 100 });
+    db[i][1] -= x; cr[j][1] -= x;
+    if (db[i][1] < 0.01) i++; if (cr[j][1] < 0.01) j++;
+  }
+  return out;
+}
+const splitLabel = (e, t) => e.mode === 'self' ? 'ส่วนตัว' : e.mode === 'custom' ? 'แยกตามที่กิน' : 'หาร ' + (e.members || t.members).length + ' คน';
+function viewMoney(t) {
+  const items = expenseItems().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  const { bal, paid, used } = balances();
+  const total = items.reduce((a, e) => a + e.amount, 0), totalThb = items.reduce((a, e) => a + thbOf(e), 0);
+  const est = items.filter(estimated);
+  const sug = suggestPay(bal);
+  const sets = of('settle').sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  const byDate = {}; items.forEach(e => (byDate[e.date || ''] = byDate[e.date || ''] || []).push(e));
+  return `
+  <div class="hero"><div class="lbl">ใช้ไปทั้งทริป</div><div class="big num" style="font-size:44px">${tm(total)}</div>
+    ${isFx() ? `<div class="lbl num">≈ ${baht(totalThb)}${est.length ? `, บัตรเครดิต ${est.length} รายการยังเป็นยอดประมาณ` : ''}</div>` : ''}</div>
+  <button class="btn" style="margin-bottom:14px" data-act="addExp">${ico('plus', 20)}เพิ่มค่าใช้จ่าย</button>
+  ${catBlock(t)}
+  ${t.members.length > 1 ? `<div class="block"><h2>ใครจ่าย ใครใช้${isFx() ? ' (บาท)' : ''}</h2>
+    ${t.members.map(m => { const b = Math.round((bal[m] || 0) * 100) / 100;
+      return `<div class="who"><div>${esc(m)}</div><div class="v num ${b > 0 ? 'in' : b < 0 ? 'out' : ''}">${b > 0 ? 'ได้คืน ' + baht(b) : b < 0 ? 'ค้าง ' + baht(-b) : 'เคลียร์แล้ว'}</div>
+        <div class="s">จ่ายไป ${baht(paid[m] || 0)}  ใช้ ${baht(used[m] || 0)}</div></div>`; }).join('')}</div>
+  <div class="block"><h2>ต้องคืนเงิน</h2>
+    ${sug.length ? sug.map(s => `<div class="row"><div class="c"><div class="t">${esc(s.from)} → ${esc(s.to)}</div>
+      <div class="s num">${baht(s.amount)}${isFx() && +t.rate ? `  (≈ ${tm(s.amount / t.rate)})` : ''}</div></div>
+      <button class="ghost" data-act="doSettle" data-from="${esc(s.from)}" data-to="${esc(s.to)}" data-amt="${s.amount}">จ่ายแล้ว</button></div>`).join('')
+      : '<div class="empty" style="padding:8px">เคลียร์กันครบแล้ว</div>'}
+    ${est.length && sug.length ? '<div class="tiny">ยอดนี้ใช้เรทประมาณของบัตรเครดิต จะตรงขึ้นเมื่อใส่ยอดบาทจริงจากบิล</div>' : ''}
+    ${sets.length ? '<div class="dh" style="margin-top:14px"><span>ประวัติการคืนเงิน</span></div>' + sets.map(s => `<div class="row tap" data-act="editSettle" data-id="${esc(s.id)}">
+      <div class="c"><div class="t">${esc(s.from)} → ${esc(s.to)}</div><div class="s">${fmtD(s.date)}, ${esc(s.method)}</div></div><div class="v num">${money(s.amount, s.cur || t.currency)}</div></div>`).join('') : ''}
+  </div>` : ''}
+  <div class="block"><h2>รายการ</h2>
+  ${items.length ? Object.keys(byDate).map(d => `<div class="dh"><span>${d ? fmtD(d) : 'ไม่ระบุวัน'}</span><span class="num">${tm(byDate[d].reduce((a, e) => a + e.amount, 0))}</span></div>` +
+    byDate[d].map(e => `<div class="row tap" data-act="${e.origin === 'leg' ? 'editLeg' : 'editExp'}" data-id="${esc(e.id)}">
+      <div class="c"><div class="t">${esc(e.title || e.category)}${estimated(e) ? '<span class="pill est">ยอดประมาณ</span>' : ''}</div>
+      <div class="s">${e.title ? esc(e.category) + ', ' : ''}${esc(e.payer)} จ่าย, ${esc(e.method)}, ${splitLabel(e, t)}</div></div>
+      <div class="v num">${tm(e.amount)}${isFx() ? `<small>${estimated(e) ? '≈ ' : ''}${baht(thbOf(e))}</small>` : ''}</div></div>`).join('')).join('') : '<div class="empty">ยังไม่มีค่าใช้จ่าย</div>'}
+  </div>`;
+}
+
+/* ----- กระเป๋าเงิน ----- */
+function viewWallet(t) {
+  const me = t.members[0];
+  const mine = expenseItems().filter(e => e.payer === me);
+  const by = {}; METHODS.forEach(m => by[m] = 0); mine.forEach(e => by[e.method] = (by[e.method] || 0) + e.amount);
+  const cashAdj = of('settle').filter(s => s.method === 'เงินสด' && (s.cur || t.currency) === t.currency).reduce((a, s) => a + (s.to === me ? s.amount : s.from === me ? -s.amount : 0), 0);
+  const tops = of('topup').sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  const top = w => tops.filter(x => x.wallet === w).reduce((a, x) => a + x.amount, 0);
+  const cashIn = top('เงินสด'), cardIn = top('Travel card');
+  const thbSpent = tops.reduce((a, x) => a + (+x.thb || 0), 0);
+  const { used } = balances();
+  return `
+  <div class="block"><h2>เงินสดในมือ</h2><div class="kv">
+    <span>คงเหลือ</span><b class="big2 num">${tm(cashIn + cashAdj - by['เงินสด'])}</b>
+    <span>แลกหรือถือมา</span><b class="num">${tm(cashIn)}</b>
+    <span>จ่ายไป</span><b class="num">${tm(by['เงินสด'])}</b>
+    ${isFx() && walletRate('เงินสด') ? `<span>เรทเฉลี่ยที่แลกมา</span><b class="num">1 = ${fmtRate(walletRate('เงินสด'))} บาท</b>` : ''}
+    ${cashAdj ? `<span>รับหรือคืนเงินเพื่อน</span><b class="num">${cashAdj > 0 ? '+' : '−'}${tm(Math.abs(cashAdj))}</b>` : ''}</div></div>
+  <div class="block"><h2>Travel card</h2><div class="kv">
+    <span>คงเหลือ</span><b class="big2 num">${tm(cardIn - by['Travel card'])}</b>
+    <span>เติมเข้า</span><b class="num">${tm(cardIn)}</b>
+    <span>ใช้ไป</span><b class="num">${tm(by['Travel card'])}</b></div></div>
+  <div class="block"><h2>สรุปของ${esc(me)}</h2><div class="kv">
+    <span>บัตรเครดิต</span><b class="num">${tm(by['บัตรเครดิต'])}</b>
+    <span>โอน/QR</span><b class="num">${tm(by['โอน/QR'])}</b>
+    <span>จ่ายออกไปทั้งหมด</span><b class="num">${tm(mine.reduce((a, e) => a + e.amount, 0))}</b>
+    <span>ส่วนที่ใช้จริง (บาท)</span><b class="num">${baht(used[me] || 0)}</b>
+    <span>เงินบาทที่ใช้แลกหรือเติม</span><b class="num">${baht(thbSpent)}</b></div></div>
+  <button class="btn" style="margin-bottom:14px" data-act="addTopup">${ico('plus', 20)}แลกเงิน / เติม Travel card</button>
+  ${tops.length ? `<div class="block"><h2>ประวัติ</h2>${tops.map(x => `<div class="row tap" data-act="editTopup" data-id="${esc(x.id)}"><div class="c"><div class="t">${esc(x.wallet)}</div>
+      <div class="s">${fmtD(x.date)}${x.thb ? ', จ่าย ' + baht(x.thb) : ''}${x.note ? ', ' + esc(x.note) : ''}</div></div><div class="v num in">+${tm(x.amount)}</div></div>`).join('')}</div>` : ''}`;
+}
+
+/* ----- ฟอร์มของทริป ----- */
+function tripForm(t) {
+  const isNew = !t;
+  openForm({
+    title: isNew ? 'ทริปใหม่' : 'แก้ไขทริป',
+    data: t ? { ...t, membersText: t.members.join(', '), rate: t.currency === 'THB' ? '' : t.rate } : { membersText: 'ฉัน', currency: 'JPY' },
+    fields: [
+      { k: 'name', label: 'ชื่อทริป', ph: 'เช่น โตเกียว ใบไม้เปลี่ยนสี' },
+      { k: 'scope', label: 'ประเภท', type: 'seg', options: ['ต่างประเทศ', 'ในประเทศ'] },
+      { k: 'dest', label: 'ปลายทาง', ph: 'เช่น โตเกียว–เกียวโต, เชียงใหม่' },
+      { k: 'start', label: 'วันเริ่มทริป', type: 'date' },
+      { k: 'end', label: 'วันจบทริป', type: 'date' },
+      { k: 'membersText', label: 'คนที่ไป (คั่นด้วย , และคนแรกคือคุณ)', ph: 'ฉัน, อั้ม, บีม' },
+      { k: 'currency', label: 'สกุลเงินของประเทศที่ไป', type: 'select', options: CURS, when: ['scope', 'ต่างประเทศ'] },
+      { k: 'rate', label: 'เรทประมาณ: 1 หน่วย = กี่บาท (เว้นว่างไว้ แอปดึงเรทวันนี้ให้)', type: 'number', when: ['scope', 'ต่างประเทศ'] }
+    ],
+    validate: o => !o.name ? 'ใส่ชื่อทริป' : !o.start || !o.end ? 'ใส่วันเริ่มและวันจบ' : o.end < o.start ? 'วันจบต้องไม่ก่อนวันเริ่ม' : '',
+    onSave: async o => {
+      o.members = [...new Set(o.membersText.split(/[,，]/).map(s => s.trim()).filter(Boolean))];
+      if (!o.members.length) o.members = ['ฉัน'];
+      delete o.membersText; o.kind = 'trip';
+      if (o.scope === 'ในประเทศ') o.currency = 'THB';
+      if (o.currency === 'THB') o.rate = 1;
+      else if (!(o.rate > 0)) {
+        try { o.rate = (await run('getRate', o.currency)).rate; }
+        catch (x) { throw new Error('ดึงเรทวันนี้ไม่ได้ ใส่เรทประมาณเองก่อน'); }
+      }
+      const r = await run('saveRec', o);
+      if (isNew) { T.id = r.id; T.recs = [r]; T.thumbs = {}; T.sub = 'overview'; T.day = 0; } else upsert(r);
+      renderTrips(); toast('บันทึกทริปแล้ว');
+    },
+    onDelete: isNew ? null : async () => {
+      if (!confirm('ลบทริปนี้ทั้งหมด รวมแผน ค่าใช้จ่าย และรูป?')) return false;
+      await run('deleteRec', t.id); T.id = null; loadTrips();
+    }
+  });
+}
+function flightForm(f) {
+  const t = trip();
+  openForm({
+    title: f ? 'แก้ไขเที่ยวบิน' : 'เพิ่มเที่ยวบิน', data: f || { date: t.start },
+    fields: [
+      { k: 'dir', label: 'เที่ยวบิน', type: 'seg', options: ['ขาไป', 'ขากลับ', 'ต่อเครื่อง'] },
+      { k: 'status', label: 'สถานะตั๋ว', type: 'seg', options: ['ยังไม่ซื้อ', 'ซื้อตั๋วแล้ว', 'เช็คอินแล้ว'] },
+      { k: 'airline', label: 'สายการบิน', ph: 'เช่น Thai Airways' },
+      { k: 'flightNo', label: 'เที่ยวบิน', ph: 'เช่น TG682' },
+      { k: 'date', label: 'วันบิน', type: 'date' },
+      { k: 'dep', label: 'เวลาออก', type: 'time' },
+      { k: 'arr', label: 'เวลาถึง (เวลาท้องถิ่น)', type: 'time' },
+      { k: 'from', label: 'ต้นทาง', ph: 'เช่น BKK' },
+      { k: 'to', label: 'ปลายทาง', ph: 'เช่น HND' },
+      { k: 'ref', label: 'รหัสการจอง (PNR)' },
+      { k: 'seat', label: 'ที่นั่ง' },
+      { k: 'price', label: 'ราคาตั๋ว (บาท)', type: 'number' },
+      { k: 'pass', label: 'บอร์ดดิ้งพาส / e-ticket', type: 'photo' },
+      { k: 'note', label: 'โน้ต', type: 'textarea', ph: 'เช่น น้ำหนักกระเป๋า, เทอร์มินัล, เกต' }
+    ],
+    onSave: saver('flight'), onDelete: f ? deleter(f.id) : null
+  });
+}
+function stayForm(s) {
+  const t = trip();
+  openForm({
+    title: s ? 'แก้ไขที่พัก' : 'เพิ่มที่พัก', data: s || { checkin: t.start, checkout: t.end },
+    fields: [
+      { k: 'maps', label: 'ลิงก์ Google Maps', type: 'maps', target: 'name' },
+      { k: 'name', label: 'ชื่อที่พัก' },
+      { k: 'checkin', label: 'เช็คอิน', type: 'date' },
+      { k: 'checkout', label: 'เช็คเอาท์', type: 'date' },
+      { k: 'status', label: 'สถานะ', type: 'seg', options: ['ยังไม่จอง', 'จองแล้ว'] },
+      { k: 'price', label: 'ราคารวม (บาท)', type: 'number' },
+      { k: 'photo', label: 'รูป', type: 'photo' },
+      { k: 'note', label: 'โน้ต', type: 'textarea', ph: 'เช่น เลขที่จอง, เวลาเช็คอิน, ใกล้สถานีไหน' }
+    ],
+    validate: o => !o.name ? 'ใส่ชื่อที่พัก' : o.checkout && o.checkin && o.checkout < o.checkin ? 'วันเช็คเอาท์ต้องหลังเช็คอิน' : '',
+    onSave: saver('stay'), onDelete: s ? deleter(s.id) : null
+  });
+}
+function stopForm(s) {
+  openForm({
+    title: s ? 'แก้ไขสถานที่' : 'เพิ่มสถานที่', data: s || { date: curDay() },
+    fields: [
+      { k: 'date', label: 'วัน', type: 'select', options: dayOpts() },
+      { k: 'time', label: 'ไปถึงประมาณกี่โมง', type: 'time' },
+      { k: 'maps', label: 'ลิงก์ Google Maps', type: 'maps', target: 'name' },
+      { k: 'name', label: 'ชื่อสถานที่ (ดึงจากลิงก์ หรือพิมพ์เอง)' },
+      { k: 'myName', label: 'ชื่อที่ฉันเรียก (ไทย/อังกฤษ)', ph: 'เช่น วัดอาซากุสะ' },
+      { k: 'note', label: 'ทำอะไร / โน้ต', type: 'textarea', ph: 'เช่น ไหว้พระ เดินถนนนากามิเสะ ซื้อขนม' },
+      { k: 'photo', label: 'รูปสถานที่', type: 'photo' }
+    ],
+    validate: o => !o.name && !o.myName && 'ใส่ชื่อสถานที่',
+    onSave: saver('stop'), onDelete: s ? deleter(s.id) : null
+  });
+}
+function legForm(l) {
+  const t = trip(), d = curDay(); ensureRate();
+  const last = of('stop').filter(x => x.date === d).sort(byTime).pop();
+  openForm({
+    title: l ? 'แก้ไขการเดินทาง' : 'เพิ่มการเดินทาง',
+    data: l || { date: d, from: last ? stopName(last) : '', payer: t.members[0], method: 'เงินสด' },
+    fields: [
+      { k: 'date', label: 'วัน', type: 'select', options: dayOpts() },
+      { k: 'time', label: 'ออกเดินทางกี่โมง', type: 'time' },
+      { k: 'mode', label: 'เดินทางด้วย', type: 'select', options: MODES },
+      { k: 'from', label: 'ขึ้นที่', ph: 'เช่น ป้ายรถเมล์ / สถานี Shinjuku' },
+      { k: 'to', label: 'ลงที่', ph: 'เช่น สถานี Ueno' },
+      { k: 'line', label: 'สาย / ชานชาลา / ทางออก', ph: 'เช่น JR Yamanote ชานชาลา 14, ออกทางออก A3' },
+      { k: 'note', label: 'โน้ต', type: 'textarea', ph: 'เช่น ลงแล้วต่อรถไฟใต้ดินสาย Ginza' },
+      { k: 'cost', label: `ค่าเดินทาง (${t.currency}) ถ้ามี`, type: 'money' },
+      { k: 'method', label: 'จ่ายด้วย', type: 'select', options: METHODS },
+      ...(isFx() ? [{ k: 'thbActual', label: 'ยอดบาทจริงจากบิลบัตรเครดิต (ใส่ทีหลังได้)', type: 'number', when: ['method', 'บัตรเครดิต'] }] : []),
+      { k: 'payer', label: 'ใครจ่าย', type: 'select', options: t.members },
+      { k: 'members', label: 'หารกับใคร', type: 'checks', options: t.members }
+    ],
+    onSave: o => { if (o.cost > 0) stampRate(o); return saver('leg')(o); }, onDelete: l ? deleter(l.id) : null
+  });
+}
+function expForm(e) {
+  const t = trip(); ensureRate();
+  openForm({
+    title: e ? 'แก้ไขค่าใช้จ่าย' : 'เพิ่มค่าใช้จ่าย',
+    data: e || { date: curDay(), payer: t.members[0], method: 'เงินสด', category: 'อาหาร', mode: t.members.length > 1 ? 'equal' : 'self' },
+    fields: [
+      { k: 'amount', label: `จำนวนเงิน (${t.currency})`, type: 'money' },
+      { k: 'category', label: 'หมวด', type: 'catchips', scope: 'trip', base: ECATS },
+      { k: 'title', label: 'รายการ (ไม่ใส่ก็ได้)', ph: 'เช่น ร้านราเมน Ichiran' },
+      { k: 'method', label: 'จ่ายด้วย', type: 'select', options: METHODS },
+      ...(isFx() ? [{ k: 'thbActual', label: 'ยอดบาทจริงจากบิลบัตรเครดิต (ใส่ทีหลังได้)', type: 'number', when: ['method', 'บัตรเครดิต'] }] : []),
+      { k: 'date', label: 'วัน', type: 'select', options: dayOpts() },
+      { k: 'payer', label: 'ใครออกเงินไปก่อน', type: 'select', options: t.members },
+      { k: 'split', type: 'split' },
+      { k: 'photo', label: 'รูปใบเสร็จ / รูปร้าน', type: 'photo' },
+      { k: 'note', label: 'โน้ต', type: 'textarea' }
+    ],
+    validate: o => {
+      if (!(o.amount > 0)) return 'ใส่จำนวนเงิน';
+      if (o.mode === 'equal' && !o.members.length) return 'เลือกคนที่หารอย่างน้อย 1 คน';
+      if (o.mode === 'custom') { const s = Object.values(o.parts).reduce((a, b) => a + b, 0); if (Math.abs(s - o.amount) > 0.01) return 'ยอดที่แยกแต่ละคนยังไม่เท่ากับยอดรวม'; }
+    },
+    onSave: async o => {
+      if (o.mode === 'self') o.members = [o.payer];
+      stampRate(o);
+      await saver('exp')(o);
+      if (!ECATS.includes(o.category)) bumpCat('trip', ECATS, o.category);
+    },
+    onDelete: e ? deleter(e.id) : null
+  });
+}
+function renderSplit(d) {
+  const mode = d.mode || 'equal';
+  $('#split').innerHTML = `<label class="fl">หารยังไง</label>
+    <div class="seg" id="splitMode"><button type="button" data-m="equal" class="${mode === 'equal' ? 'on' : ''}">หารเท่ากัน</button>
+    <button type="button" data-m="custom" class="${mode === 'custom' ? 'on' : ''}">ตามที่กิน</button>
+    <button type="button" data-m="self" class="${mode === 'self' ? 'on' : ''}">ส่วนตัว</button></div>
+    <div id="splitBody" style="margin-top:10px"></div>`;
+  drawSplitBody(mode, d);
+}
+function drawSplitBody(mode, d) {
+  const t = trip();
+  if (mode === 'self') {
+    $('#splitBody').innerHTML = '<div class="hint" id="splitHint"></div>';
+  } else if (mode === 'equal') {
+    const sel = d.members && d.members.length ? d.members : t.members;
+    $('#splitBody').innerHTML = `<div class="checks" id="splitMembers">${t.members.map(m =>
+      `<button type="button" class="chip ${sel.includes(m) ? 'on' : ''}" data-v="${esc(m)}">${esc(m)}</button>`).join('')}</div><div class="hint" id="splitHint"></div>`;
+  } else {
+    const p = d.parts || {};
+    $('#splitBody').innerHTML = t.members.map(m => `<div class="prow"><span>${esc(m)}</span>
+      <input inputmode="decimal" data-p="${esc(m)}" value="${p[m] ?? ''}" placeholder="0"></div>`).join('') + '<div class="hint" id="splitHint"></div>';
+  }
+  updateSplitHint();
+}
+function readSplit() {
+  const mode = $('#splitMode .on')?.dataset.m || 'equal';
+  if (mode === 'self') { const p = formVal('payer'); return { mode, members: p ? [p] : [], parts: null }; }
+  if (mode === 'equal') return { mode, members: $$('#splitMembers .on').map(b => b.dataset.v), parts: null };
+  const parts = {};
+  $$('#splitBody [data-p]').forEach(i => { const v = num(i.value); if (v > 0) parts[i.dataset.p] = v; });
+  return { mode, parts, members: Object.keys(parts) };
+}
+function updateSplitHint() {
+  const h = $('#splitHint'); if (!h) return;
+  const amt = num($('[name="amount"]')?.value), s = readSplit();
+  if (s.mode === 'self') h.textContent = `เป็นค่าใช้จ่ายของ ${formVal('payer')} คนเดียว ไม่ต้องหารหรือคืนเงินใคร`;
+  else if (s.mode === 'equal') h.textContent = s.members.length ? `คนละ ${tm(amt / s.members.length)}` : 'เลือกอย่างน้อย 1 คน';
+  else {
+    const diff = amt - Object.values(s.parts).reduce((a, b) => a + b, 0);
+    h.textContent = Math.abs(diff) < 0.01 ? 'ยอดครบแล้ว' : diff > 0 ? `ยังเหลือ ${tm(diff)} ที่ยังไม่ได้แบ่ง` : `เกินยอดรวม ${tm(-diff)}`;
+  }
+}
+function settleForm(s) {
+  const t = trip();
+  openForm({
+    title: s && s.id ? 'แก้ไขการคืนเงิน' : 'บันทึกการคืนเงิน',
+    data: { date: curDay(), method: 'โอน/QR', ...s, cur: s && s.cur || (s && s.id ? t.currency : 'THB') },
+    fields: [
+      { k: 'from', label: 'ใครจ่าย', type: 'select', options: t.members },
+      { k: 'to', label: 'จ่ายให้ใคร', type: 'select', options: t.members },
+      ...(isFx() ? [{ k: 'cur', label: 'คืนเป็นเงิน', type: 'seg', options: ['THB', t.currency] }] : []),
+      { k: 'amount', label: 'จำนวน', type: 'number' },
+      { k: 'method', label: 'จ่ายด้วย', type: 'seg', options: ['เงินสด', 'โอน/QR'] },
+      { k: 'date', label: 'วันที่', type: 'date' }
+    ],
+    validate: o => o.from === o.to ? 'คนจ่ายกับคนรับต้องไม่ใช่คนเดียวกัน' : !(o.amount > 0) && 'ใส่จำนวนเงิน',
+    onSave: saver('settle'), onDelete: s && s.id ? deleter(s.id) : null
+  });
+}
+function topupForm(x) {
+  const t = trip();
+  openForm({
+    title: x ? 'แก้ไข' : 'แลกเงิน / เติมเงิน', data: x || { date: ymd(new Date()) },
+    fields: [
+      { k: 'wallet', label: 'เข้ากระเป๋า', type: 'seg', options: ['เงินสด', 'Travel card'] },
+      { k: 'amount', label: `ได้มา (${t.currency})`, type: 'number' },
+      { k: 'thb', label: 'จ่ายไปกี่บาท', type: 'number' },
+      { k: 'date', label: 'วันที่', type: 'date' },
+      { k: 'note', label: 'โน้ต', ph: 'เช่น แลกที่ SuperRich, เติม YouTrip' }
+    ],
+    validate: o => !(o.amount > 0) && 'ใส่จำนวนเงิน',
+    onSave: saver('topup'), onDelete: x ? deleter(x.id) : null
+  });
+}
+
+/* ----- ปุ่มในหน้าทริป ----- */
+$('#trips').addEventListener('click', e => {
+  if (e.target.closest('a')) return;
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const id = b.dataset.id;
+  const acts = {
+    retry: () => loadTrips(),
+    newTrip: () => tripForm(), openTrip: () => openTrip(id),
+    back: () => { T.id = null; T.recs = []; loadTrips(); },
+    editTrip: () => tripForm(trip()),
+    sub: () => { T.sub = b.dataset.s; renderTrips(); },
+    day: () => { T.day = +b.dataset.i; renderTrips(); },
+    addFlight: () => flightForm(), editFlight: () => flightForm(rec(id)),
+    addStay: () => stayForm(), editStay: () => stayForm(rec(id)),
+    addStop: () => stopForm(), editStop: () => stopForm(rec(id)),
+    addLeg: () => legForm(), editLeg: () => legForm(rec(id)),
+    addExp: () => expForm(), editExp: () => expForm(rec(id)),
+    doSettle: () => settleForm({ from: b.dataset.from, to: b.dataset.to, amount: +b.dataset.amt, cur: 'THB' }),
+    who: () => { T.who = b.dataset.v; T.catAll = false; renderTrips(); },
+    catAll: () => { T.catAll = !T.catAll; renderTrips(); },
+    editSettle: () => settleForm(rec(id)),
+    addTopup: () => topupForm(), editTopup: () => topupForm(rec(id)),
+    view: () => viewPhoto(id)
+  };
+  acts[b.dataset.act] && acts[b.dataset.act]();
+});
+
+/* ---------- เริ่ม ---------- */
+$('#date').value = ymd(new Date());
+renderChips();
+function start() {
+  loadLedger();
+  run('listProps').then(p => { L.props = p; renderProps(); }).catch(() => {});
+  run('getSettings').then(o => { S.cats = o.cats || {}; renderChips(); }).catch(() => {});
+  if (tripsLoaded) loadTrips();
+}
+if (API.url && API.key) start(); else showGate('');
+</script>
+</body>
+</html>

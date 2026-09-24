@@ -588,7 +588,7 @@ const lockScroll = on => document.body.classList.toggle('lock', on);
 
 /* ---------- เชื่อมต่อ Apps Script ---------- */
 // ใส่ลิงก์ Apps Script ของคุณระหว่าง ' ' ตรงนี้ ทุกคนที่เปิดแอปจะไม่ต้องกรอกลิงก์เอง
-const DEFAULT_API = '';
+const DEFAULT_API = 'https://script.google.com/macros/s/AKfycbzKJ83C2doztFFIoppAVQ1W4Ov4Vv-eNO49W9gihOVS6KUuQ-19bGXPG7zvYDXzoS0/exec';
 const QP = new URLSearchParams(location.search);
 const QAPI = QP.get('api') || '';
 let QJOIN = (QP.get('join') || '').toUpperCase().replace(/[^A-Z0-9]/g, '');

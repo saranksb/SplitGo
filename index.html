@@ -321,6 +321,11 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none}
 .mseg button small{font-size:12px;color:var(--ink3);font-weight:500}
 .mseg button.on small{color:var(--ink2)}
 .mseg button span{display:inline-flex;align-items:center;gap:6px}
+.sechead{display:flex;align-items:center;gap:10px;margin:26px 0 12px;padding:0 2px}
+.sechead:first-child{margin-top:4px}
+.sechead .badge{width:34px;height:34px;border-radius:12px;background:var(--brand-soft);color:var(--brand-ink);display:flex;align-items:center;justify-content:center;flex:none}
+.sechead b{font-size:19px;font-family:"Noto Serif Thai","Noto Serif",Georgia,serif}
+.sechead .num{margin-left:auto;font-size:15px;color:var(--ink2);font-weight:600}
 .row .t svg{vertical-align:-2px;color:var(--ink3);margin-left:5px}
 .ic.big{width:54px;height:54px;border-radius:17px;margin-bottom:10px}
 .dtop .big{font-size:40px;margin:0 0 2px}
@@ -369,6 +374,7 @@ const EN = {
   // ทั่วไป
   'ทริป': 'Trips', 'ทริปของฉัน': 'My trips', 'สวัสดี {u}': 'Hi, {u}', 'ใส่โค้ด': 'Enter code', 'ทริปใหม่': 'New trip',
   'ค่าใช้จ่ายทริป': 'Trip expenses', 'ส่วนตัวของฉัน': 'My personal', 'ค่าใช้จ่ายส่วนตัวของฉัน': 'My personal spending', 'หารกันในทริป': 'Shared in the trip',
+  'ค่าใช้จ่ายที่แชร์กับคนในทริป': 'Expenses shared with the trip', 'ค่าใช้จ่ายแชร่ (Expense share) {x}': 'Expense share {x}',
   'เห็นเฉพาะคุณ ไม่รวมในการหารกับเพื่อน': 'Only you can see these. They are not split with friends.', 'ยังไม่มีค่าใช้จ่ายส่วนตัว': 'No personal expenses yet',
   'กดปุ่ม + เพื่อบันทึกของที่จ่ายคนเดียว': 'Tap + to add something only you pay for', 'รายการค่าใช้จ่ายทริป': 'Trip expenses list', 'รายการส่วนตัว': 'Personal expenses',
   'แยกตามหมวด': 'By category', 'แบ่งกันยังไง': 'How it is split', 'เรทที่ใช้': 'Rate used', 'บันทึกโดย': 'Added by', 'แตะเพื่อดูรูปเต็ม': 'Tap to see the full photo',
@@ -477,7 +483,7 @@ const EN = {
   'ยาประจำตัว': 'Personal medication', 'ที่ชาร์จ/พาวเวอร์แบงก์': 'Charger / power bank',
   'พาสปอร์ต / วีซ่า': 'Passport / visa', 'ประกันเดินทาง': 'Travel insurance', 'ซิม/eSIM เน็ตต่างประเทศ': 'SIM/eSIM for data abroad', 'แจ้งธนาคารก่อนใช้บัตรต่างประเทศ': 'Notify your bank before using cards abroad',
   'เช็คลิสต์ก่อนไป': 'Pre-trip checklist', 'ติ๊กให้ครบก่อนออกเดินทาง': 'Check everything off before you leave',
-  'ยังไม่มีรายการ': 'Nothing here yet', 'เพิ่มรายการเช็คลิสต์': 'Add checklist item', 'แก้ไขรายการ': 'Edit item', 'ชื่อรายการ': 'Item name', 'เช่น จองรถเช่า': 'e.g. book a rental car', 'ใส่ชื่อรายการ': 'Enter an item name',
+  'ยังไม่มีรายการ': 'Nothing here yet', 'เพิ่มรายการเช็คลิสต์': 'Add checklist item', 'แก้ไขรายการ': 'Edit item', 'เช่น จองรถเช่า': 'e.g. book a rental car', 'ใส่ชื่อรายการ': 'Enter an item name',
   'ไอคอน': 'Icon', 'อื่นๆ': 'Other', 'พาสปอร์ต/บัตร': 'Passport/ID', 'ประกัน': 'Insurance', 'ยา': 'Medication', 'ปลั๊กแปลง': 'Adapter', 'ซิม/eSIM': 'SIM/eSIM', 'บัตร/ธนาคาร': 'Card/bank', 'กระเป๋า': 'Bag',
   'เบอร์ฉุกเฉิน': 'Emergency contacts', 'สถานทูตไทยและเบอร์ฉุกเฉินท้องถิ่น': 'Thai embassy and local emergency numbers',
   'ยังไม่มีเบอร์ติดต่อฉุกเฉิน': 'No emergency contacts yet', 'เลือกประเทศตอนแก้ไขทริป แอปจะเติมให้อัตโนมัติ': 'Pick a country when editing the trip and the app fills these in automatically',
@@ -1454,6 +1460,30 @@ function applyTrip(r, sameTrip) {
   reconcilePending(T.id);
 }
 function freshEnough(id, seq) { return T.id === id && T.mut === seq && !SYNC; }
+// กันรายการหายถาวรถ้าปิดแอป/สลับแอปกลางคันตอนกำลังบันทึก (PENDREC/CONFIRMED อยู่แค่ในหน่วยความจำ หายไปถ้าโหลดหน้าใหม่)
+// เก็บคำขอบันทึกที่ยังไม่ยืนยันไว้ใน localStorage ด้วย แล้วลองส่งซ้ำทุกครั้งที่เปิดแอป
+const OBK = () => 'ts_ob_' + ME.username;
+function obGet() { try { return JSON.parse(localStorage.getItem(OBK()) || '[]'); } catch (e) { return []; } }
+function obSet(list) { try { localStorage.setItem(OBK(), JSON.stringify(list)); } catch (e) {} }
+function obAdd(cid, payload, localId) { const l = obGet().filter(x => x.cid !== cid); l.push({ cid, payload, localId, ts: Date.now() }); obSet(l); }
+function obRemove(cid) { const l = obGet(); const n = l.filter(x => x.cid !== cid); if (n.length !== l.length) obSet(n); }
+async function flushOutbox() {
+  for (const item of obGet()) {
+    try {
+      const r = await run('saveRec', item.payload);
+      obRemove(item.cid);
+      noteConfirmed(item.payload.tripId, r);
+      if (T.id === item.payload.tripId) {
+        const i = T.recs.findIndex(x => x.id === item.localId);
+        if (i >= 0) T.recs[i] = r; else if (!T.recs.some(x => x.id === r.id)) T.recs.push(r);
+        cacheTrip(); renderTrips();
+      }
+    } catch (e) {
+      if (e && e.code === 'AUTH') break; // รอเข้าสู่ระบบใหม่ก่อน ค่อยลองใหม่ครั้งหน้า
+      if (!isNetErr(e)) obRemove(item.cid); // เซิร์ฟเวอร์ปฏิเสธถาวร ลองซ้ำไปก็ไม่มีประโยชน์
+    }
+  }
+}
 // โหลดทริปใหม่เงียบๆ เพื่อเห็นรายการที่เพื่อนเพิ่งบันทึก
 async function reloadTrip() {
   if (!T.id || $('#sheetBg').classList.contains('show')) return;
@@ -1496,6 +1526,7 @@ async function openTrip(id) {
 // บันทึกแบบไม่ต้องรอ: ปิดฟอร์มและแสดงรายการทันที แล้วส่งขึ้น Google ต่อเบื้องหลัง ถ้าไม่สำเร็จจะคืนค่าเดิม
 const PEND = {}; // id ชั่วคราว -> Promise ของ id จริง
 async function realId(id) { return PEND[id] ? await PEND[id] : id; }
+const isNetErr = x => !!(x && /เชื่อมต่อไม่ได้|ตอบกลับผิดรูปแบบ/.test(x.message || ''));
 function saver(kind) {
   return async o => {
     o.kind = kind; o.tripId = T.id;
@@ -1506,7 +1537,12 @@ function saver(kind) {
     upsert(local); renderTrips(); toast(t('บันทึกแล้ว')); syncUI(1);
     (PENDREC[tripId] = PENDREC[tripId] || []).push(local);
     const send = { ...o }; delete send._pend;
+    if (tmp) send.cid = tmp; // ให้เซิร์ฟเวอร์กันสร้างซ้ำ ถ้าคำขอนี้เคยไปถึงแล้วแต่ตอบกลับมาไม่ทัน (แอปถูกปิดกลางคัน)
+    const outboxKey = tmp || (local.id + ':' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6));
+    // เก็บคำขอไว้ใน localStorage ด้วย กันรายการหายถาวรถ้าปิด/สลับแอปกลางคันก่อนบันทึกเสร็จ (ลองส่งซ้ำตอนเปิดแอปครั้งหน้า)
+    obAdd(outboxKey, send, local.id);
     const job = run('saveRec', send).then(r => {
+      obRemove(outboxKey);
       PENDREC[tripId] = (PENDREC[tripId] || []).filter(x => x.id !== local.id);
       noteConfirmed(tripId, r);
       if (T.id === tripId) {
@@ -1517,6 +1553,12 @@ function saver(kind) {
       }
       return r.id;
     }, x => {
+      if (isNetErr(x)) {
+        // เน็ตหลุดตอนบันทึก: คงรายการที่เห็นไว้เหมือนเดิม (ยังอยู่ใน PENDREC/localStorage) แล้วลองส่งซ้ำอัตโนมัติทันทีที่เน็ตกลับมาหรือเปิดแอปใหม่
+        toast(t('เน็ตหลุดตอนบันทึก จะลองส่งใหม่ให้อัตโนมัติ'));
+        return null;
+      }
+      obRemove(outboxKey);
       PENDREC[tripId] = (PENDREC[tripId] || []).filter(y => y.id !== local.id);
       if (T.id === tripId) {
         if (prev) upsert(prev); else T.recs = T.recs.filter(y => y.id !== local.id);
@@ -1544,10 +1586,9 @@ function deleter(id) {
 function renderFab() {
   const f = $('#fab'), show = !!(T.id && trip()) && !$('#sheetBg').classList.contains('show') && $('#gate').hidden;
   f.hidden = !show; if (!show) return;
-  const selfView = T.sub === 'money' && T.mview === 'self' && trip().members.length > 1;
-  f.innerHTML = ico('plus', 22) + (T.sub === 'wallet' ? t('แลกเงิน') : selfView ? t('ค่าใช้จ่ายส่วนตัวใหม่') : t('ค่าใช้จ่ายใหม่'));
+  f.innerHTML = ico('plus', 22) + (T.sub === 'wallet' ? t('แลกเงิน') : t('ค่าใช้จ่ายใหม่'));
 }
-$('#fab').onclick = () => T.sub === 'wallet' ? topupForm() : expForm(null, T.sub === 'money' && T.mview === 'self' ? { mode: 'self' } : null);
+$('#fab').onclick = () => T.sub === 'wallet' ? topupForm() : expForm(null, null);
 
 /* ----- หน้ารายการทริป และหน้าทริป ----- */
 function renderTrips() {
@@ -1794,28 +1835,20 @@ function expList(items, x) {
       <div class="s">${e.title ? esc(t(e.category)) + ', ' : ''}${e.mode === 'self' ? '' : tf('{x} จ่าย', { x: esc(e.payer) }) + ', '}${esc(t(e.method))}${e.mode === 'self' ? '' : ', ' + splitLabel(e, x)}${recBy(e)}</div></div>
       <div class="v num">${tm(e.amount)}${isFx() ? `<small>${estimated(e) ? '≈ ' : ''}${baht(thbOf(e))}</small>` : ''}</div></div>`).join('')).join('');
 }
+const sectionHead = (icon, title, sum) => `<div class="sechead">${ico(icon, 18)}<b>${title}</b><span class="num">${sum}</span></div>`;
 function viewMoney(x) {
   const multi = x.members.length > 1, me = myName();
   const byNew = (a, b) => (b.date || '').localeCompare(a.date || '');
   const all = expenseItems();
+  // แยกเป็น 2 หัวข้อเสมอ: ค่าใช้จ่ายที่แชร์กับคนในทริป (คิดหารตามเงื่อนไขการจ่าย) กับค่าใช้จ่ายส่วนตัวที่ไม่หารใคร
   const personal = all.filter(e => e.mode === 'self' && (e.payer === me || e.by === ME.username)).sort(byNew);
   const tripItems = all.filter(e => e.mode !== 'self').sort(byNew);
-  const view = multi ? (T.mview === 'self' ? 'self' : 'trip') : 'all';
   const sum = a => a.reduce((s, e) => s + e.amount, 0), sumThb = a => a.reduce((s, e) => s + thbOf(e), 0);
-  const seg = multi ? `<div class="seg mseg">
-      <button data-act="mview" data-v="trip" class="${view === 'trip' ? 'on' : ''}"><span>${ico('users', 16)}${t('ค่าใช้จ่ายทริป')}</span><small class="num">${tm(sum(tripItems))}</small></button>
-      <button data-act="mview" data-v="self" class="${view === 'self' ? 'on' : ''}"><span>${ico('lock', 16)}${t('ส่วนตัวของฉัน')}</span><small class="num">${tm(sum(personal))}</small></button></div>` : '';
   const heroOf = (label, items) => { const est = items.filter(estimated);
     return `<div class="hero"><div class="lbl">${label}</div><div class="big num">${tm(sum(items))}</div>
       ${isFx() ? `<div class="lbl num">≈ ${baht(sumThb(items))}${est.length ? ', ' + tf('{n} รายการยังเป็นยอดประมาณ', { n: est.length }) : ''}</div>` : ''}</div>`; };
 
-  if (view === 'self') return seg + heroOf(t('ค่าใช้จ่ายส่วนตัวของฉัน'), personal) + `
-    <div class="privacy">${ico('lock', 15)}<span>${t('เห็นเฉพาะคุณ ไม่รวมในการหารกับเพื่อน')}</span></div>
-    ${personal.length ? catBlock(x, personal, false) : ''}
-    <div class="block">${head('list', t('รายการส่วนตัว'), t('เรียงตามวัน ล่าสุดอยู่บน'))}
-      ${personal.length ? expList(personal, x) : `<div class="empty">${t('ยังไม่มีค่าใช้จ่ายส่วนตัว')}<br>${t('กดปุ่ม + เพื่อบันทึกของที่จ่ายคนเดียว')}</div>`}</div>`;
-
-  if (view === 'all') { const items = all.sort(byNew);
+  if (!multi) { const items = all.sort(byNew);
     return heroOf(t('ใช้ไปทั้งทริป'), items) + catBlock(x, items, false) + `
     <div class="block">${head('list', t('รายการ'), t('เรียงตามวัน ล่าสุดอยู่บน'))}
       ${items.length ? expList(items, x) : `<div class="empty">${t('ยังไม่มีค่าใช้จ่าย')}</div>`}</div>`; }
@@ -1823,7 +1856,8 @@ function viewMoney(x) {
   const { bal, paid, used } = balances(tripItems);
   const est = tripItems.filter(estimated), sug = suggestPay(bal);
   const sets = of('settle').sort(byNew);
-  return seg + heroOf(t('ค่าใช้จ่ายทริป'), tripItems) + `
+  const sharedSection = `${sectionHead('users', t('ค่าใช้จ่ายที่แชร์กับคนในทริป'), tm(sum(tripItems)))}
+  ${heroOf(t('ค่าใช้จ่ายทริป'), tripItems)}
   ${myBlock(bal, paid, used)}
   ${catBlock(x, tripItems, true)}
   <div class="block">${head('users', t('ใครจ่าย ใครใช้'), isFx() ? t('ยอดเป็นเงินบาท ทุกคนเห็นตรงกัน') : t('ยอดที่แต่ละคนจ่ายและใช้จริง'))}
@@ -1841,6 +1875,12 @@ function viewMoney(x) {
   </div>
   <div class="block">${head('list', t('รายการค่าใช้จ่ายทริป'), t('เรียงตามวัน ล่าสุดอยู่บน'))}
     ${tripItems.length ? expList(tripItems, x) : `<div class="empty">${t('ยังไม่มีค่าใช้จ่าย')}</div>`}</div>`;
+  const personalSection = `${sectionHead('lock', t('ค่าใช้จ่ายส่วนตัวของฉัน'), tm(sum(personal)))}
+  <div class="privacy">${ico('lock', 15)}<span>${t('เห็นเฉพาะคุณ ไม่รวมในการหารกับเพื่อน')}</span></div>
+  ${personal.length ? catBlock(x, personal, false) : ''}
+  <div class="block">${head('list', t('รายการส่วนตัว'), t('เรียงตามวัน ล่าสุดอยู่บน'))}
+    ${personal.length ? expList(personal, x) : `<div class="empty">${t('ยังไม่มีค่าใช้จ่ายส่วนตัว')}<br>${t('กดปุ่ม + เพื่อบันทึกของที่จ่ายคนเดียว')}</div>`}</div>`;
+  return sharedSection + personalSection;
 }
 
 // ดูรายละเอียดค่าใช้จ่ายก่อน ค่อยกดแก้ไข
@@ -2048,7 +2088,7 @@ function checkForm(c) {
   openForm({
     title: t(c ? 'แก้ไขรายการ' : 'เพิ่มรายการเช็คลิสต์'), data: c || { icon: 'dots' },
     fields: [
-      { k: 'title', label: t('ชื่อรายการ'), ph: t('เช่น จองรถเช่า') },
+      { k: 'title', label: t('รายการ'), ph: t('เช่น จองรถเช่า') },
       { k: 'icon', label: t('ไอคอน'), type: 'select', raw: true, options: [['dots','อื่นๆ'],['idcard','พาสปอร์ต/บัตร'],['shield','ประกัน'],['pill','ยา'],['plug','ปลั๊กแปลง'],['sim','ซิม/eSIM'],['card','บัตร/ธนาคาร'],['bag','กระเป๋า']] }
     ],
     validate: o => !o.title && t('ใส่ชื่อรายการ'),
@@ -2092,6 +2132,8 @@ async function shareSummary() {
     const fl = of('flight'), st = of('stay');
     const pre = fl.reduce((a, f) => a + (+f.price || 0), 0) + st.reduce((a, s) => a + (+s.price || 0), 0);
     const grand = pre + totalThb;
+    const tripItems = items.filter(e => e.mode !== 'self');
+    const shareThb = isFx() ? tripItems.reduce((a, e) => a + thbOf(e), 0) : tripItems.reduce((a, e) => a + e.amount, 0);
     const { bal, used } = balances();
     const myBudget = of('budget')[0];
     const cats = catStats().slice(0, 3);
@@ -2112,6 +2154,10 @@ async function shareSummary() {
     g.fillStyle = onBrand; g.font = '26px sans-serif'; g.fillText(t('ค่าใช้จ่ายรวมทั้งทริป'), 96, 292);
     g.font = '700 66px "Noto Serif Thai","Noto Serif",Georgia,serif'; g.fillText(baht(grand), 96, 380);
     let y = 480;
+    if (x.members.length > 1) {
+      g.fillStyle = ink; g.font = '600 28px sans-serif';
+      g.fillText(tf('ค่าใช้จ่ายแชร่ (Expense share) {x}', { x: baht(shareThb) }), 64, y); y += 56;
+    }
     if (myBudget && myBudget.amount > 0) {
       const pct = Math.round((used[myName()] || 0) / myBudget.amount * 100);
       g.fillStyle = ink; g.font = '600 28px sans-serif';
@@ -2211,7 +2257,6 @@ function expForm(e, preset) {
     },
     onSave: async o => {
       if (o.mode === 'self') o.members = [o.payer];
-      if (x.members.length > 1) T.mview = o.mode === 'self' ? 'self' : 'trip';
       cleanPay(o); stampRate(o);
       await saver('exp')(o);
       if (!ECATS.includes(o.category)) bumpCat('trip', ECATS, o.category);
@@ -2390,7 +2435,6 @@ $('#trips').addEventListener('click', e => {
     addStop: () => stopForm(), editStop: () => stopForm(rec(id)),
     addLeg: () => legForm(), editLeg: () => legForm(rec(id)),
     addExp: () => expForm(), editExp: () => expForm(rec(id)), detail: () => expDetail(id),
-    mview: () => { T.mview = b.dataset.v; T.who = ''; T.catAll = false; renderTrips(); renderFab(); },
     doSettle: () => settleForm({ from: b.dataset.from, to: b.dataset.to, amount: +b.dataset.amt, cur: 'THB' }),
     who: () => { T.who = b.dataset.v; T.catAll = false; renderTrips(); },
     catAll: () => { T.catAll = !T.catAll; renderTrips(); },
@@ -2459,12 +2503,15 @@ async function start() {
   if (!T.id) loadTrips();
   run('getSettings').then(o => { S.cats = o.cats || {}; cacheSet(x => { x.cats = S.cats; }); }).catch(() => {});
   run('me').then(m => { if (m.username !== ME.username) { ME.username = m.username; LS.set('ts_user', m.username); } }).catch(() => {});
+  flushOutbox(); // ลองส่งซ้ำรายการที่ค้างจากตอนก่อนหน้า (เช่น ปิดแอปกลางคันตอนกำลังบันทึก)
   if (QJOIN) { const q = QJOIN; QJOIN = ''; openJoin(q); }
 }
 // เอาโค้ดเชิญออกจากลิงก์ ไม่ให้ติดไปกับไอคอนบนหน้าจอโฮม
 if (QJOIN) try { history.replaceState(null, '', location.pathname + (QAPI ? '?api=' + enc(QAPI) : '')); } catch (e) {}
 setLang(LANG);
 if (API.url && API.tok) start(); else showGate('');
+window.addEventListener('online', () => { if (API.tok) flushOutbox(); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden && API.tok) flushOutbox(); });
 </script>
 </body>
 </html>

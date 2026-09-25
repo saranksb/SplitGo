@@ -152,8 +152,10 @@ button.leg{width:100%;border:0;background:none;text-align:left}
 .ticket:last-child{border-bottom:0;padding-bottom:0}
 .ticket:first-of-type{padding-top:0}
 .tk-top{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--ink2)}
-.tk-route{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;margin:8px 0 6px}
-.tk-route b{display:block;font-family:var(--serif);font-size:28px;font-weight:600;line-height:1.1}
+.tk-route{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:10px;margin:8px 0 6px}
+.tk-route b{display:block;font-family:var(--serif);font-size:28px;font-weight:600;line-height:1.15;overflow-wrap:break-word;word-break:break-word;hyphens:auto}
+.tk-route b.long{font-size:16px;line-height:1.25}
+.tk-route b.mid{font-size:20px;line-height:1.2}
 .tk-route small{font-size:13px;color:var(--ink2)}
 .tk-route .r{text-align:right}
 .tk-line{position:relative;border-top:1.5px dashed var(--line);display:grid;place-items:center}
@@ -240,6 +242,11 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none}
 .mrow{display:grid;grid-template-columns:1fr auto;gap:8px}
 .mrow button{border:0;background:var(--brand-ink);color:var(--on-brand);border-radius:12px;padding:0 16px;font-size:14px;font-weight:600}
 .ph{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ap-wrap{position:relative}
+.ap-sug{position:absolute;left:0;right:0;top:100%;z-index:20;background:var(--surface);border:1px solid var(--line);border-radius:12px;margin-top:4px;max-height:220px;overflow:auto;box-shadow:0 8px 24px rgba(0,0,0,.15)}
+.ap-sug button{display:block;width:100%;text-align:left;padding:10px 14px;border:0;background:none;font-size:14px;color:var(--ink)}
+.ap-sug button b{font-weight:600}
+.ap-sug button:active,.ap-sug button:hover{background:var(--brand-soft)}
 .ph.busy{pointer-events:none}
 .ph.busy .phbtn{opacity:.5}
 .pherr{flex-basis:100%;font-size:13px;color:#b4413a;margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
@@ -624,6 +631,30 @@ const lockScroll = on => document.body.classList.toggle('lock', on);
 /* ---------- เชื่อมต่อ Apps Script ---------- */
 // ใส่ลิงก์ Apps Script ของคุณระหว่าง ' ' ตรงนี้ ทุกคนที่เปิดแอปจะไม่ต้องกรอกลิงก์เอง
 const DEFAULT_API = 'https://script.google.com/macros/s/AKfycbzKJ83C2doztFFIoppAVQ1W4Ov4Vv-eNO49W9gihOVS6KUuQ-19bGXPG7zvYDXzoS0/exec';
+// รายชื่อสนามบิน (โหลดครั้งเดียว แคชไว้ในเครื่อง) สำหรับเติมชื่อเต็มจากรหัส 3 ตัว
+let AIRPORTS = null;
+function loadAirports() {
+  if (AIRPORTS) return Promise.resolve(AIRPORTS);
+  try {
+    const c = localStorage.getItem('ts_airports');
+    if (c) { AIRPORTS = JSON.parse(c); setTimeout(fetchAirports, 0); return Promise.resolve(AIRPORTS); }
+  } catch (e) {}
+  return fetchAirports();
+}
+async function fetchAirports() {
+  try {
+    const r = await fetch('airports.json'); const j = await r.json();
+    AIRPORTS = j; try { localStorage.setItem('ts_airports', JSON.stringify(j)); } catch (e) {}
+  } catch (e) {}
+  return AIRPORTS || {};
+}
+const apLabel = (code, name) => `${name} (${code})`;
+// ถ้าเป็นชื่อเต็มที่ขยายไว้แล้ว (จบด้วย (XXX)) ให้ดึงเฉพาะรหัสออกมา
+function apCodeOf(v) {
+  const m = String(v || '').match(/\(([A-Za-z]{3})\)\s*$/); if (m) return m[1].toUpperCase();
+  const m2 = String(v || '').trim().match(/^([A-Za-z]{3})$/); return m2 ? m2[1].toUpperCase() : '';
+}
+
 const QP = new URLSearchParams(location.search);
 const QAPI = QP.get('api') || '';
 let QJOIN = (QP.get('join') || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -788,6 +819,7 @@ let FORM = null;
 function openForm(cfg) {
   if (!$('#sheetBg').classList.contains('show')) { navPush(); $('#sheet').classList.remove('noanim'); }
   FORM = cfg;
+  if (cfg.fields.some(f => f.type === 'airport')) loadAirports();
   const d = cfg.data || {};
   $('#sheet').innerHTML = `<div class="shh"><button data-act="fclose">${t('ยกเลิก')}</button><b>${esc(cfg.title)}</b>
     <button class="strong" data-act="fsave">${t('บันทึก')}</button></div>
@@ -863,6 +895,8 @@ function fieldInner(f, v) {
       return `<div class="fld">${lab}<input class="amtin num" name="${f.k}" inputmode="decimal" value="${val === '' || val === 0 ? '' : esc(val)}" placeholder="0"><div class="hint num" id="fxHint"></div></div>`;
     case 'number':
       return `<div class="fld">${lab}<input name="${f.k}" inputmode="decimal" value="${val === '' || val === 0 ? '' : esc(val)}"${ph || ' placeholder="0"'}></div>`;
+    case 'airport':
+      return `<div class="fld"><label class="fl">${esc(f.label)}</label><div class="ap-wrap"><input name="${f.k}" value="${esc(val)}"${ph} autocomplete="off" data-airport="1"><div class="ap-sug" hidden></div></div></div>`;
     default:
       return `<div class="fld">${lab}<input name="${f.k}" type="${f.type || 'text'}" value="${esc(val)}"${ph} autocomplete="off"></div>`;
   }
@@ -885,6 +919,9 @@ function readForm() {
   return o;
 }
 $('#sheet').addEventListener('click', async e => {
+  const apOpt = e.target.closest('.ap-sug button');
+  if (apOpt) { const inp = apOpt.closest('.ap-wrap').querySelector('input'); inp.value = apOpt.dataset.full; apHide(inp); return; }
+  if (!e.target.closest('.ap-wrap')) $$('.ap-sug').forEach(el => el.hidden = true);
   const segB = e.target.closest('.seg[data-k] button');
   if (segB) {
     $$('button', segB.parentNode).forEach(b => b.classList.toggle('on', b === segB));
@@ -976,8 +1013,32 @@ async function copyText(x) {
   catch (e) { prompt(t('คัดลอกข้อความนี้ไปส่งให้เพื่อน:'), x); }
 }
 function growTa(el) { el.style.height = 'auto'; el.style.height = Math.max(76, el.scrollHeight + 2) + 'px'; }
+function apSuggest(inp) {
+  const box = inp.closest('.ap-wrap').querySelector('.ap-sug');
+  const q = inp.value.trim().toLowerCase();
+  if (!AIRPORTS || q.length < 2 || apCodeOf(inp.value)) { box.hidden = true; box.innerHTML = ''; return; }
+  const isCode = /^[a-z]{1,3}$/.test(q);
+  const hits = [];
+  for (const code in AIRPORTS) {
+    const name = AIRPORTS[code];
+    if (code.toLowerCase().startsWith(q) || name.toLowerCase().includes(q)) hits.push([code, name]);
+    if (hits.length >= 30) break;
+  }
+  hits.sort((a, b) => (a[0].toLowerCase() === q ? -1 : 0) - (b[0].toLowerCase() === q ? -1 : 0) || (isCode ? a[0].localeCompare(b[0]) : a[1].length - b[1].length));
+  const top = hits.slice(0, 6);
+  if (!top.length) { box.hidden = true; box.innerHTML = ''; return; }
+  box.innerHTML = top.map(([code, name]) => `<button type="button" data-full="${esc(apLabel(code, name))}"><b>${esc(code)}</b> — ${esc(name)}</button>`).join('');
+  box.hidden = false;
+}
+function apHide(inp) { const box = inp.closest('.ap-wrap').querySelector('.ap-sug'); box.hidden = true; box.innerHTML = ''; }
+function apExpand(inp) {
+  apHide(inp);
+  const code = apCodeOf(inp.value); if (!code || !AIRPORTS) return;
+  const name = AIRPORTS[code]; if (name) inp.value = apLabel(code, name);
+}
 $('#sheet').addEventListener('input', e => {
   if (e.target.tagName === 'TEXTAREA') growTa(e.target);
+  if (e.target.dataset.airport) apSuggest(e.target);
   if (e.target.name === 'amount' || e.target.name === 'cost' || e.target.dataset.p !== undefined) updateSplitHint();
   if (e.target.name === 'amount' || e.target.name === 'cost') autoTc();
   if (['amount', 'cost', 'thbActual'].includes(e.target.name)) updateFxHint();
@@ -990,6 +1051,7 @@ $('#sheet').addEventListener('keydown', e => {
 });
 $('#sheet').addEventListener('change', e => {
   if (e.target.type === 'file') handlePhoto(e.target);
+  if (e.target.dataset.airport) apExpand(e.target);
   if (e.target.tagName === 'SELECT') { autoTc(); applyWhen(); FORM && FORM.onChange && FORM.onChange(); updateFxHint(); updateSplitHint(); }
 });
 // แสดงยอดเงินบาทใต้ช่องจำนวนเงิน
@@ -1115,6 +1177,7 @@ function closeViewer(fromNav) {
 $('#viewer').onclick = () => closeViewer();
 const thumb = id => id && T.thumbs[id] ? `<img class="th" data-thumb="${esc(id)}" data-act="view" data-id="${esc(id)}" alt="">` : '';
 function fillThumbs(root) { $$('img[data-thumb]', root || document).forEach(im => { const x = T.thumbs[im.dataset.thumb]; if (x && im.getAttribute('s' + 'rc') !== x) im.setAttribute('s' + 'rc', x); }); }
+const apCls = s => (s || '').length > 26 ? 'long' : (s || '').length > 15 ? 'mid' : '';
 const extLink = (href, icon, text) => `<a class="ghost" target="_blank" rel="noopener" href="${esc(href)}">${ico(icon, 16)}${text}</a>`;
 
 /* =================================================
@@ -1390,9 +1453,9 @@ function viewOverview(x) {
   <div class="block">${head('plane', t('เที่ยวบิน'), t('ตั๋ว เวลา และบอร์ดดิ้งพาส'), add('addFlight'))}
   ${fl.length ? fl.map(f => `<div class="ticket tap" data-act="editFlight" data-id="${esc(f.id)}">
       <div class="tk-top"><span>${esc(t(f.dir))}, ${wday(f.date)} ${fmtD(f.date)}</span><span class="pill ${okF(f.status) ? 'ok' : 'no'}">${esc(t(f.status))}</span></div>
-      <div class="tk-route"><div><b>${esc(f.from || '—')}</b><small>${esc(f.dep || '')}</small></div>
+      <div class="tk-route"><div><b class="${apCls(f.from)}">${esc(f.from || '—')}</b><small>${esc(f.dep || '')}</small></div>
         <div class="tk-line">${ico('air', 18)}</div>
-        <div class="r"><b>${esc(f.to || '—')}</b><small>${esc(f.arr || '')}</small></div></div>
+        <div class="r"><b class="${apCls(f.to)}">${esc(f.to || '—')}</b><small>${esc(f.arr || '')}</small></div></div>
       <div class="meta">${[f.flightNo, f.airline, f.ref && tf('รหัสจอง {x}', { x: f.ref }), f.seat && tf('ที่นั่ง {x}', { x: f.seat })].filter(Boolean).map(y => `<span>${esc(y)}</span>`).join('')}</div>
       ${f.note ? `<div class="nt">${esc(f.note)}</div>` : ''}
       ${f.pass || f.flightNo ? `<div class="acts">${thumb(f.pass)}
@@ -1726,8 +1789,8 @@ function flightForm(f) {
       { k: 'date', label: t('วันบิน'), type: 'date' },
       { k: 'dep', label: t('เวลาออก'), type: 'time' },
       { k: 'arr', label: t('เวลาถึง (เวลาท้องถิ่น)'), type: 'time' },
-      { k: 'from', label: t('ต้นทาง'), ph: t('เช่น BKK') },
-      { k: 'to', label: t('ปลายทาง'), ph: t('เช่น HND') },
+      { k: 'from', label: t('ต้นทาง'), type: 'airport', ph: t('พิมพ์รหัสสนามบิน 3 ตัว เช่น BKK') },
+      { k: 'to', label: t('ปลายทาง'), type: 'airport', ph: t('พิมพ์รหัสสนามบิน 3 ตัว เช่น HND') },
       { k: 'ref', label: t('รหัสการจอง (PNR)') },
       { k: 'seat', label: t('ที่นั่ง') },
       { k: 'price', label: t('ราคาตั๋ว (บาท)'), type: 'number' },

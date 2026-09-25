@@ -467,7 +467,9 @@ const EN = {
   'ทำสำเนาทริปแล้ว เที่ยวบิน/ที่พัก/แผนถูกคัดลอกมาให้ (ไม่รวมค่าใช้จ่ายและรูป)': 'Trip duplicated. Flights/stays/plan were copied over (not expenses or photos).',
   'ประเทศ (ใช้เติมเบอร์ฉุกเฉิน/สถานทูตไทยให้อัตโนมัติ)': 'Country (auto-fills embassy/emergency contacts)',
   '— เลือกประเทศ —': '— Select a country —',
-  'งบประมาณทั้งทริป (บาท, ไม่ใส่ก็ได้)': 'Trip budget (baht, optional)',
+  'งบส่วนตัวในทริปนี้ (บาท, ไม่ใส่ก็ได้)': 'Your personal budget for this trip (baht, optional)',
+  'งบส่วนตัว': 'Personal budget', 'ตั้งงบให้ตัวเอง เทียบกับที่ใช้ไปจริง (เห็นเฉพาะคุณ)': 'Set your own budget and compare with actual spend (only you can see this)',
+  'ยังไม่ได้ตั้งงบ': 'No budget set', 'ตั้งงบส่วนตัว': 'Set personal budget',
   'สถานทูตไทย': 'Royal Thai Embassy',
   'เบอร์ฉุกเฉินท้องถิ่น': 'Local emergency number',
   'กรมการกงสุล (Call Center 24 ชม.)': 'Dept. of Consular Affairs (24hr call centre)',
@@ -483,7 +485,7 @@ const EN = {
   'เบอร์โทร': 'Phone number', 'โน้ต / เวลาติดต่อ': 'Note / contact hours', 'เช่น Hotline ฉุกเฉิน 24 ชม.': 'e.g. 24hr emergency hotline',
   'แชร์สรุป': 'Share summary', 'บันทึกรูปสรุปทริปแล้ว': 'Trip summary image saved', 'สร้างรูปสรุปไม่สำเร็จ': 'Could not create the summary image',
   'บินวันนี้!': 'Flying today!', 'เปิดเช็คอินออนไลน์ได้แล้ว (ปกติเปิดก่อนบิน 24–48 ชม.)': 'Online check-in should be open now (usually opens 24–48hrs before departure)',
-  'ใช้ไป {a} จากงบ {b} ที่ตั้งไว้ ({p}%)': 'Spent {a} of your {b} budget ({p}%)', 'งบ {b} · ใช้ไปแล้ว {p}%': 'Budget {b} · {p}% used',
+  'ใช้ไป {a} จากงบ {b} ที่ตั้งไว้ ({p}%)': 'Spent {a} of your {b} budget ({p}%)', 'งบส่วนตัว {b} · ใช้ไปแล้ว {p}%': 'Personal budget {b} · {p}% used',
   'ค่าใช้จ่ายรวมทั้งทริป': 'Total trip spend',
   'อีก {n} วันจะบิน ({dir})': '{n} days to your {dir} flight',
   ' ของทุกคนในทริป': ' for everyone in the trip', 'ลบทริปแล้ว': 'Trip deleted',
@@ -1429,9 +1431,27 @@ async function loadTrips() {
 }
 // ทุกครั้งที่แก้ข้อมูลในเครื่อง ตัวนับจะเพิ่ม คำตอบจาก Google ที่ขอไว้ก่อนการแก้ล่าสุดจะไม่ถูกเอามาทับ
 T.mut = 0;
+const PENDREC = {}; // tripId -> รายการที่กำลังบันทึกค้างอยู่ (ยังไม่ได้คำตอบจากเซิร์ฟเวอร์)
+const CONFIRMED = {}; // tripId -> [{rec, ts}] รายการที่เพิ่งบันทึกสำเร็จเมื่อไม่นาน
+const RECENT_MS = 8000;
+function noteConfirmed(tripId, rc) {
+  const list = CONFIRMED[tripId] = (CONFIRMED[tripId] || []).filter(x => x.rec.id !== rc.id && Date.now() - x.ts < RECENT_MS);
+  list.push({ rec: rc, ts: Date.now() });
+}
+// คำตอบจาก getTrip บางครั้งอ่านข้อมูลจากเซิร์ฟเวอร์ไปตั้งแต่ก่อนที่การบันทึกล่าสุดจะเขียนเสร็จ (ส่งคำขอพร้อมกัน)
+// จึงอาจไม่มีรายการที่เพิ่งบันทึกหรือกำลังบันทึกอยู่ ใส่กลับเข้าไปกันไม่ให้ดูเหมือนรายการหายไป
+function reconcilePending(id) {
+  const now = Date.now();
+  (PENDREC[id] || []).forEach(rc => { if (!T.recs.some(x => x.id === rc.id)) T.recs.push(rc); });
+  (CONFIRMED[id] || []).forEach(({ rec: rc, ts }) => {
+    if (now - ts > RECENT_MS) return;
+    if (!T.recs.some(x => x.id === rc.id)) T.recs.push(rc);
+  });
+}
 function applyTrip(r, sameTrip) {
   T.recs = r.recs; T.rates = r.rates || {}; T.loadedAt = Date.now();
   T.thumbs = Object.assign({}, sameTrip ? T.thumbs : {}, r.thumbs || {}); // รวมรูป ไม่ทิ้งรูปที่เพิ่งอัปโหลด
+  reconcilePending(T.id);
 }
 function freshEnough(id, seq) { return T.id === id && T.mut === seq && !SYNC; }
 // โหลดทริปใหม่เงียบๆ เพื่อเห็นรายการที่เพื่อนเพิ่งบันทึก
@@ -1454,7 +1474,10 @@ async function openTrip(id) {
   T.id = id; T.recs = []; T.sub = 'overview'; T.day = 0; T.who = ''; T.catAll = false;
   const firstView = () => { const i = tripDays(trip()).indexOf(ymd(new Date())); if (i >= 0) { T.day = i; T.sub = 'plan'; } };
   const cached = (cacheGet().trips || {})[id];
-  if (cached) { applyTrip({ recs: cached.recs, rates: cached.rates, thumbs: T.thumbCache[id] || {} }, false); T.loadedAt = 0; firstView(); renderTrips(); window.scrollTo(0, 0); }
+  if (cached) {
+    applyTrip({ recs: cached.recs, rates: cached.rates, thumbs: T.thumbCache[id] || {} }, false);
+    T.loadedAt = 0; firstView(); renderTrips(); window.scrollTo(0, 0);
+  }
   else { $('#trips').innerHTML = `<div class="empty">${t('กำลังเปิดทริป…')}</div>`; renderFab(); }
   const seq = T.mut;
   try {
@@ -1481,8 +1504,11 @@ function saver(kind) {
     const tmp = o.id ? '' : 'tmp' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
     const local = { ...o, id: o.id || tmp, by: prev ? prev.by : ME.username, _pend: true };
     upsert(local); renderTrips(); toast(t('บันทึกแล้ว')); syncUI(1);
+    (PENDREC[tripId] = PENDREC[tripId] || []).push(local);
     const send = { ...o }; delete send._pend;
     const job = run('saveRec', send).then(r => {
+      PENDREC[tripId] = (PENDREC[tripId] || []).filter(x => x.id !== local.id);
+      noteConfirmed(tripId, r);
       if (T.id === tripId) {
         const i = T.recs.findIndex(x => x.id === local.id);
         if (i >= 0) T.recs[i] = r; else upsert(r);
@@ -1491,6 +1517,7 @@ function saver(kind) {
       }
       return r.id;
     }, x => {
+      PENDREC[tripId] = (PENDREC[tripId] || []).filter(y => y.id !== local.id);
       if (T.id === tripId) {
         if (prev) upsert(prev); else T.recs = T.recs.filter(y => y.id !== local.id);
         renderTrips();
@@ -1577,7 +1604,6 @@ function viewOverview(x) {
   const chk = of('check');
   const contacts = of('contact');
   const pre = fl.reduce((a, f) => a + (+f.price || 0), 0) + st.reduce((a, s) => a + (+s.price || 0), 0);
-  const spentThb = pre + (isFx() ? expenseItems().reduce((a, e) => a + thbOf(e), 0) : expenseItems().reduce((a, e) => a + e.amount, 0));
   const okF = s => s === 'ซื้อตั๋วแล้ว' || s === 'เช็คอินแล้ว';
   const add = act => `<button class="link" data-act="${act}">${ico('plus', 16)}${t('เพิ่ม')}</button>`;
   return `
@@ -1623,13 +1649,12 @@ function viewOverview(x) {
     <span>${t('ตั๋วและที่พักที่จองไว้')}</span><b class="num">${baht(pre)}</b>
     <span>${t('ค่าใช้จ่ายระหว่างทริป')}</span><b class="num">${tm(expenseItems().reduce((a, e) => a + e.amount, 0))}</b>
     ${isFx() ? `<span>${t('คิดเป็นเงินบาท')}</span><b class="num">≈ ${baht(expenseItems().reduce((a, e) => a + thbOf(e), 0))}</b>` : ''}</div>
-    ${x.budget > 0 ? budgetBar(x, spentThb) : ''}
     ${isFx() ? `<div class="tiny" style="margin-top:12px">${t('สกุลเงิน')}: ${tf('{c}, เรทประมาณ 1 = {r} บาท', { c: esc(x.currency), r: fmtRate(+x.rate || 0) })}</div>` : ''}</div>`;
 }
-function budgetBar(x, spent) {
-  const pct = Math.min(100, Math.round(spent / x.budget * 100)), over = spent > x.budget;
+function budgetBar(spent, budget) {
+  const pct = Math.min(100, Math.round(spent / budget * 100)), over = spent > budget;
   return `<div class="bbar"><div class="bb-track"><div class="bb-fill${over ? ' over' : ''}" style="width:${pct}%"></div></div>
-    <div class="tiny">${tf('ใช้ไป {a} จากงบ {b} ที่ตั้งไว้ ({p}%)', { a: baht(spent), b: baht(x.budget), p: pct })}</div></div>`;
+    <div class="tiny">${tf('ใช้ไป {a} จากงบ {b} ที่ตั้งไว้ ({p}%)', { a: baht(spent), b: baht(budget), p: pct })}</div></div>`;
 }
 
 /* ----- แผนรายวัน ----- */
@@ -1861,6 +1886,7 @@ function viewWallet(x) {
   const { paid, used } = balances();
   const cashRate = walletRate('เงินสด'), cardRate = walletRate('Travel card');
   const est = mine.some(estimated);
+  const myBudget = of('budget')[0];
   return `
   ${shared(x) ? `<div class="privacy">${ico('lock', 15)}<span>${t('หน้านี้เห็นเฉพาะคุณ เพื่อนในทริปไม่เห็นการแลกเงินและยอดเงินในกระเป๋าของคุณ')}</span></div>` : ''}
   <div class="block mine">${head('user', t('เงินของฉันในทริปนี้'), isFx() ? t('คิดเป็นเงินบาท แม้ไม่ได้บันทึกการแลกเงิน') : '')}<div class="kv">
@@ -1868,7 +1894,10 @@ function viewWallet(x) {
     <span>${t('จ่ายออกไปทั้งหมด')}${x.members.length > 1 ? `<br><small>${t('รวมที่ออกให้เพื่อน')}</small>` : ''}</span><b class="num">${est ? '≈ ' : ''}${baht(paid[me] || 0)}</b>
     ${METHODS.filter(m => by[m]).map(m => `<span style="display:flex;align-items:center;gap:6px">${ico(METHI[m], 16)}${esc(t(m))}</span><b class="num">${tm(by[m])}${isFx() ? `<br><small>≈ ${baht(byThb[m])}</small>` : ''}</b>`).join('')}
     ${thbSpent ? `<span>${t('เงินบาทที่ใช้แลกหรือเติม')}</span><b class="num">${baht(thbSpent)}</b>` : ''}</div>
-    ${isFx() ? `<div class="tiny">${t('ถ้าไม่ได้บันทึกการแลกเงิน แอปใช้เรทวันที่บันทึกรายการแทน')}</div>` : ''}</div>
+    ${isFx() ? `<div class="tiny">${t('ถ้าไม่ได้บันทึกการแลกเงิน แอปใช้เรทวันที่บันทึกรายการแทน')}</div>` : ''}
+    ${myBudget && myBudget.amount > 0 ? budgetBar(used[me] || 0, myBudget.amount) : ''}
+    <button type="button" class="link" style="margin-top:10px" data-act="editBudget">${ico('target', 16)}${t(myBudget && myBudget.amount > 0 ? 'งบส่วนตัว' : 'ตั้งงบส่วนตัว')}</button>
+  </div>
   <div class="block">${head('cash', t('เงินสดในมือ'), t('ที่แลกมา และที่เหลืออยู่'))}<div class="kv">
     <span>${t('คงเหลือ')}</span><b class="big2 num">${tm(cashIn + cashAdj - by['เงินสด'])}</b>
     <span>${t('แลกหรือถือมา')}</span><b class="num">${tm(cashIn)}</b>
@@ -1909,8 +1938,7 @@ function tripForm(x) {
       ...(isNew ? [{ k: 'info', type: 'note', text: t('เพื่อนที่ยังไม่มีบัญชีก็ใส่ชื่อไว้ก่อนได้ บันทึกทริปแล้วกดปุ่มแชร์เพื่อส่งโค้ดให้เพื่อนเข้ามาเลือกชื่อตัวเอง') }] : []),
       { k: 'currency', label: t('สกุลเงินของประเทศที่ไป'), type: 'select', raw: true, options: CURS.map(([k, l]) => [k, LANG === 'en' ? `${k} ${CUR_EN[k]}` : l]), when: ['scope', 'ต่างประเทศ'] },
       { k: 'rate', label: t('เรทประมาณ: 1 หน่วย = กี่บาท (เว้นว่างไว้ แอปดึงเรทวันนี้ให้)'), type: 'number', when: ['scope', 'ต่างประเทศ'] },
-      { k: 'mapProvider', label: t('แผนที่นำทาง (บางประเทศเช่นจีนเปิด Google Maps ไม่ได้ ให้ใช้ Apple Maps แทน)'), type: 'seg', options: ['Google Maps', 'Apple Maps'] },
-      { k: 'budget', label: t('งบประมาณทั้งทริป (บาท, ไม่ใส่ก็ได้)'), type: 'number', ph: t('เช่น 20000') }
+      { k: 'mapProvider', label: t('แผนที่นำทาง (บางประเทศเช่นจีนเปิด Google Maps ไม่ได้ ให้ใช้ Apple Maps แทน)'), type: 'seg', options: ['Google Maps', 'Apple Maps'] }
     ],
     validate: o => !o.name ? t('ใส่ชื่อทริป') : !o.start || !o.end ? t('ใส่วันเริ่มและวันจบ') : o.end < o.start ? t('วันจบต้องไม่ก่อนวันเริ่ม') : '',
     onSave: async o => {
@@ -2044,6 +2072,16 @@ function contactForm(c) {
     onSave: saver('contact'), onDelete: c ? deleter(c.id) : null
   });
 }
+function budgetForm() {
+  const b = of('budget')[0];
+  openForm({
+    title: t('งบส่วนตัว'), data: b || {},
+    fields: [
+      { k: 'amount', label: t('งบส่วนตัวในทริปนี้ (บาท, ไม่ใส่ก็ได้)'), type: 'number', ph: t('เช่น 20000') }
+    ],
+    onSave: saver('budget'), onDelete: b ? deleter(b.id) : null
+  });
+}
 function cssVar(n) { return (getComputedStyle(document.documentElement).getPropertyValue(n) || '').trim(); }
 function fitText(g, s, maxW) { s = String(s); while (g.measureText(s).width > maxW && s.length > 1) s = s.slice(0, -2) + '…'; return s; }
 async function shareSummary() {
@@ -2054,7 +2092,8 @@ async function shareSummary() {
     const fl = of('flight'), st = of('stay');
     const pre = fl.reduce((a, f) => a + (+f.price || 0), 0) + st.reduce((a, s) => a + (+s.price || 0), 0);
     const grand = pre + totalThb;
-    const { bal } = balances();
+    const { bal, used } = balances();
+    const myBudget = of('budget')[0];
     const cats = catStats().slice(0, 3);
     const bg = cssVar('--bg') || '#F5EDD6', surf = cssVar('--surface') || '#FBF7EA', ink = cssVar('--ink') || '#23291F',
       ink2 = cssVar('--ink2') || '#5B6453', brand = cssVar('--brand') || '#7E9B75', brandInk = cssVar('--brand-ink') || '#44603E',
@@ -2073,10 +2112,10 @@ async function shareSummary() {
     g.fillStyle = onBrand; g.font = '26px sans-serif'; g.fillText(t('ค่าใช้จ่ายรวมทั้งทริป'), 96, 292);
     g.font = '700 66px "Noto Serif Thai","Noto Serif",Georgia,serif'; g.fillText(baht(grand), 96, 380);
     let y = 480;
-    if (x.budget > 0) {
-      const pct = Math.round(grand / x.budget * 100);
+    if (myBudget && myBudget.amount > 0) {
+      const pct = Math.round((used[myName()] || 0) / myBudget.amount * 100);
       g.fillStyle = ink; g.font = '600 28px sans-serif';
-      g.fillText(tf('งบ {b} · ใช้ไปแล้ว {p}%', { b: baht(x.budget), p: pct }), 64, y); y += 56;
+      g.fillText(tf('งบส่วนตัว {b} · ใช้ไปแล้ว {p}%', { b: baht(myBudget.amount), p: pct }), 64, y); y += 56;
     }
     const balEntries = Object.entries(bal).filter(([, v]) => Math.abs(v) > .5);
     if (balEntries.length) {
@@ -2360,6 +2399,7 @@ $('#trips').addEventListener('click', e => {
     addCheck: () => checkForm(), editCheck: () => checkForm(rec(id)), toggleCheck: () => toggleCheck(id),
     addContact: () => contactForm(), editContact: () => contactForm(rec(id)),
     shareSummary: () => shareSummary(),
+    editBudget: () => budgetForm(),
     view: () => viewPhoto(id)
   };
   acts[b.dataset.act] && acts[b.dataset.act]();

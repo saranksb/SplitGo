@@ -242,6 +242,8 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none}
 .ph{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .ph.busy{pointer-events:none}
 .ph.busy .phbtn{opacity:.5}
+.pherr{flex-basis:100%;font-size:13px;color:#b4413a;margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pherr button{padding:6px 12px}
 .uping{font-size:14px;color:var(--brand-ink);display:flex;align-items:center;gap:8px}
 .uping::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--brand);animation:blink 1s ease-in-out infinite}
 .phbtn{border:1.5px dashed var(--line);border-radius:12px;padding:10px 14px;font-size:15px;display:inline-flex;align-items:center;gap:8px;color:var(--ink2)}
@@ -490,7 +492,7 @@ const EN = {
   'หรือพิมพ์ชื่อใหม่ ถ้าไม่มีชื่อคุณ': 'Or type a new name', 'พิมพ์ชื่อที่เพื่อนเรียกคุณ': 'Type the name friends call you', 'ชื่อที่มีคนเลือกแล้ว: {x}': 'Already taken: {x}',
   'เลือกชื่อของคุณ หรือพิมพ์ชื่อใหม่': 'Pick your name or type a new one', 'กำลังเข้าร่วม…': 'Joining…', 'เข้าร่วมทริปแล้ว': 'You joined the trip',
   // รูป
-  'เลือกรูป': 'Choose photo', 'เปลี่ยนรูป': 'Change photo', 'เอารูปออก': 'Remove photo', 'อัปโหลดรูปแล้ว': 'Photo uploaded', 'อัปโหลดรูปไม่สำเร็จ': 'Upload failed',
+  'เลือกรูป': 'Choose photo', 'เปลี่ยนรูป': 'Change photo', 'เอารูปออก': 'Remove photo', 'อัปโหลดรูปแล้ว': 'Photo uploaded', 'อัปโหลดรูปไม่สำเร็จ': 'Upload failed', 'ลองอีกครั้ง': 'Try again',
   'เปิดรูปไม่ได้': 'Can\'t open the photo', 'กำลังโหลดรูปเต็ม · แตะเพื่อปิด': 'Loading full photo · tap to close', 'แตะเพื่อปิด': 'Tap to close', 'โหลดรูปเต็มไม่ได้': 'Couldn\'t load the full photo',
   // ข้อความจากเซิร์ฟเวอร์
   'ปิดรับสมัครบัญชีใหม่อยู่ ติดต่อเจ้าของแอป': 'Sign-ups are closed. Contact the app owner.',
@@ -1053,25 +1055,50 @@ function handlePhoto(input) {
 }
 async function uploadPhoto(input) {
   const file = input.files[0]; if (!file) return;
-  const box = input.closest('.ph'); box.classList.add('busy');
-  const holder = $('.phimg', box), before = holder.innerHTML;
-  holder.innerHTML = `<span class="uping">${t('กำลังอัปโหลดรูป…')}</span>`;
+  const box = input.closest('.ph'); input.value = '';
+  let prep;
+  try { prep = await preparePhoto(file); }
+  catch (e) { return photoFail(box, e.message, null); }
+  return sendPhoto(box, prep);
+}
+// ย่อรูปในเครื่องก่อน แล้วค่อยส่ง ถ้าส่งไม่ผ่านจะเก็บรูปที่ย่อแล้วไว้ให้กดลองใหม่ได้
+async function preparePhoto(file) {
+  let img;
   try {
-    let img, full, th;
-    try {
-      img = await decodeImg(file);
-      full = toJpeg(img, 1600, .8);
-      let q = .7;
-      do { th = toJpeg(img, 240, q); q -= .1; } while (th.length > 20000 && q > .2);
-    } catch (x) { throw new Error(t('อ่านรูปนี้ไม่ได้ ลองเลือกรูปอื่น หรือแคปหน้าจอแล้วแนบแทน')); }
-    finally { if (img && img.close) img.close(); }
-    const r = await run('savePhoto', T.id || '', th, full, file.name || 'photo.jpg');
-    T.thumbs[r.id] = th; if (T.id) T.thumbCache[T.id] = T.thumbs;
-    box.dataset.v = r.id; $('.phimg', box).innerHTML = `<img data-thumb="${esc(r.id)}" data-act="viewp" data-id="${esc(r.id)}" alt="">`; fillThumbs(box);
-    if (!$('[data-act="phclear"]', box)) box.insertAdjacentHTML('beforeend', `<button type="button" class="ghost" data-act="phclear">${t('เอารูปออก')}</button>`);
-    toast(t('อัปโหลดรูปแล้ว'));
-  } catch (e) { holder.innerHTML = before; fillThumbs(box); toast(t('อัปโหลดรูปไม่สำเร็จ') + (e && e.message ? ': ' + e.message : '')); }
-  box.classList.remove('busy'); input.value = '';
+    img = await decodeImg(file);
+    const full = toJpeg(img, 1600, .8);
+    let q = .7, th;
+    do { th = toJpeg(img, 240, q); q -= .1; } while (th.length > 20000 && q > .2);
+    return { full, th, name: file.name || 'photo.jpg' };
+  } catch (x) { throw new Error(t('อ่านรูปนี้ไม่ได้ ลองเลือกรูปอื่น หรือแคปหน้าจอแล้วแนบแทน')); }
+  finally { if (img && img.close) img.close(); }
+}
+async function sendPhoto(box, prep) {
+  const holder = $('.phimg', box);
+  if (!('before0' in box)) box.before0 = holder.innerHTML;
+  box.classList.add('busy'); $('.pherr', box)?.remove();
+  holder.innerHTML = `<span class="uping">${t('กำลังอัปโหลดรูป…')}</span>`;
+  let r, err;
+  for (let i = 0; i < 2 && !r; i++) {
+    try { r = await run('savePhoto', T.id || '', prep.th, prep.full, prep.name); }
+    catch (e) { err = e; if (e.code === 'AUTH') break; if (i === 0) await new Promise(ok => setTimeout(ok, 1500)); }
+  }
+  box.classList.remove('busy');
+  if (!r) return photoFail(box, err && err.message, prep);
+  T.thumbs[r.id] = prep.th; if (T.id) T.thumbCache[T.id] = T.thumbs;
+  box.dataset.v = r.id; delete box.before0;
+  holder.innerHTML = `<img data-thumb="${esc(r.id)}" data-act="viewp" data-id="${esc(r.id)}" alt="">`; fillThumbs(box);
+  if (!$('[data-act="phclear"]', box)) box.insertAdjacentHTML('beforeend', `<button type="button" class="ghost" data-act="phclear">${t('เอารูปออก')}</button>`);
+  toast(t('อัปโหลดรูปแล้ว'));
+}
+// แสดงข้อความค้างไว้ในช่องรูป (ไม่ใช่แค่แจ้งเตือนแวบเดียว) พร้อมปุ่มลองใหม่
+function photoFail(box, msg, prep) {
+  const holder = $('.phimg', box);
+  if ('before0' in box) { holder.innerHTML = box.before0; delete box.before0; fillThumbs(box); }
+  $('.pherr', box)?.remove();
+  box.insertAdjacentHTML('beforeend', `<div class="pherr">${esc(t('อัปโหลดรูปไม่สำเร็จ') + (msg ? ': ' + msg : ''))}${prep ? `<button type="button" class="ghost">${t('ลองอีกครั้ง')}</button>` : ''}</div>`);
+  const btn = $('.pherr button', box);
+  if (btn) btn.onclick = () => { const p = sendPhoto(box, prep); if (FORM) { FORM.uploads = FORM.uploads || new Set(); FORM.uploads.add(p); p.finally(() => FORM && FORM.uploads && FORM.uploads.delete(p)); } };
 }
 async function viewPhoto(id) {
   const v = $('#viewer');

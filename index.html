@@ -165,6 +165,25 @@ button.leg{width:100%;border:0;background:none;text-align:left}
 .th{width:88px;height:66px;object-fit:cover;border-radius:12px;display:block}
 .nt{font-size:14px;color:var(--ink2);margin-top:4px;white-space:pre-wrap}
 .tt{font-weight:600;font-size:16px;line-height:1.35}
+.callout{display:flex;gap:12px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-bottom:16px}
+.callout.urge{background:var(--brand-soft);border-color:var(--brand)}
+.co-ic{color:var(--brand-ink);flex-shrink:0;margin-top:1px}
+.co-tx b{font-size:15px}
+.co-tx div{font-size:13px;color:var(--ink2);margin-top:3px}
+.checkrow{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
+.checkrow:last-child{border-bottom:0}
+.checkrow .cbox{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--on-brand)}
+.checkrow.done .cbox{background:var(--brand);border-color:var(--brand)}
+.checkrow .cic{color:var(--brand-ink);flex-shrink:0}
+.checkrow .ct{flex:1;font-size:15px}
+.checkrow.done .ct{color:var(--ink3);text-decoration:line-through}
+.ib.sm{width:32px;height:32px;border:0;background:none}
+.callnum{display:inline-flex;align-items:center;gap:6px;font-family:var(--serif);font-size:20px;font-weight:600;color:var(--brand-ink);margin-top:2px}
+.bbar{margin-top:14px}
+.bb-track{height:10px;border-radius:6px;background:var(--sunk);overflow:hidden}
+.bb-fill{height:100%;background:var(--brand);border-radius:6px}
+.bb-fill.over{background:#B4413A}
+
 
 /* วัน: สีประจำวันแบบไทย */
 .days{display:flex;gap:8px;overflow-x:auto;margin:0 -20px 16px;padding:2px 20px 4px;scrollbar-width:none}
@@ -443,6 +462,30 @@ const EN = {
   'ใส่ชื่อทริป': 'Enter a trip name', 'ใส่วันเริ่มและวันจบ': 'Enter start and end dates', 'วันจบต้องไม่ก่อนวันเริ่ม': 'End date can\'t be before the start',
   'ดึงเรทวันนี้ไม่ได้ ใส่เรทประมาณเองก่อน': 'Couldn\'t get today\'s rate. Enter an approximate rate.', 'บันทึกทริปแล้ว': 'Trip saved',
   'ลบทริปนี้ทั้งหมด': 'Delete this whole trip', 'ลบทริป "{x}" ทั้งหมด รวมแผน ค่าใช้จ่าย และรูป{y}?\nกู้คืนไม่ได้': 'Delete "{x}" with all plans, expenses and photos{y}?\nThis can\'t be undone.',
+  'ทำสำเนาทริปนี้ (เอาแผนไปใช้กับทริปใหม่)': 'Duplicate this trip (copy the plan to a new trip)',
+  'ทำสำเนาทริปนี้ เอาเที่ยวบิน ที่พัก และแผนไปวันไปยังทริปใหม่? (ไม่รวมค่าใช้จ่าย เงินสด และรูป)': 'Duplicate this trip? Flights, stays and the day plan will be copied to a new trip (not expenses, cash or photos).',
+  'ทำสำเนาทริปแล้ว เที่ยวบิน/ที่พัก/แผนถูกคัดลอกมาให้ (ไม่รวมค่าใช้จ่ายและรูป)': 'Trip duplicated. Flights/stays/plan were copied over (not expenses or photos).',
+  'ประเทศ (ใช้เติมเบอร์ฉุกเฉิน/สถานทูตไทยให้อัตโนมัติ)': 'Country (auto-fills embassy/emergency contacts)',
+  '— เลือกประเทศ —': '— Select a country —',
+  'งบประมาณทั้งทริป (บาท, ไม่ใส่ก็ได้)': 'Trip budget (baht, optional)',
+  'สถานทูตไทย': 'Royal Thai Embassy',
+  'เบอร์ฉุกเฉินท้องถิ่น': 'Local emergency number',
+  'กรมการกงสุล (Call Center 24 ชม.)': 'Dept. of Consular Affairs (24hr call centre)',
+  'โทรจากไทย 0-2572-8442': 'From Thailand: 0-2572-8442',
+  'ยาประจำตัว': 'Personal medication', 'ที่ชาร์จ/พาวเวอร์แบงก์': 'Charger / power bank',
+  'พาสปอร์ต / วีซ่า': 'Passport / visa', 'ประกันเดินทาง': 'Travel insurance', 'ซิม/eSIM เน็ตต่างประเทศ': 'SIM/eSIM for data abroad', 'แจ้งธนาคารก่อนใช้บัตรต่างประเทศ': 'Notify your bank before using cards abroad',
+  'เช็คลิสต์ก่อนไป': 'Pre-trip checklist', 'ติ๊กให้ครบก่อนออกเดินทาง': 'Check everything off before you leave',
+  'ยังไม่มีรายการ': 'Nothing here yet', 'เพิ่มรายการเช็คลิสต์': 'Add checklist item', 'แก้ไขรายการ': 'Edit item', 'ชื่อรายการ': 'Item name', 'เช่น จองรถเช่า': 'e.g. book a rental car', 'ใส่ชื่อรายการ': 'Enter an item name',
+  'ไอคอน': 'Icon', 'อื่นๆ': 'Other', 'พาสปอร์ต/บัตร': 'Passport/ID', 'ประกัน': 'Insurance', 'ยา': 'Medication', 'ปลั๊กแปลง': 'Adapter', 'ซิม/eSIM': 'SIM/eSIM', 'บัตร/ธนาคาร': 'Card/bank', 'กระเป๋า': 'Bag',
+  'เบอร์ฉุกเฉิน': 'Emergency contacts', 'สถานทูตไทยและเบอร์ฉุกเฉินท้องถิ่น': 'Thai embassy and local emergency numbers',
+  'ยังไม่มีเบอร์ติดต่อฉุกเฉิน': 'No emergency contacts yet', 'เลือกประเทศตอนแก้ไขทริป แอปจะเติมให้อัตโนมัติ': 'Pick a country when editing the trip and the app fills these in automatically',
+  'เพิ่มเบอร์ติดต่อฉุกเฉิน': 'Add emergency contact', 'แก้ไขเบอร์ติดต่อ': 'Edit contact', 'ชื่อ': 'Name', 'เช่น สถานทูตไทย, โรงพยาบาลใกล้ที่พัก': 'e.g. Thai embassy, hospital near your hotel', 'ใส่ชื่อผู้ติดต่อ': 'Enter a contact name',
+  'เบอร์โทร': 'Phone number', 'โน้ต / เวลาติดต่อ': 'Note / contact hours', 'เช่น Hotline ฉุกเฉิน 24 ชม.': 'e.g. 24hr emergency hotline',
+  'แชร์สรุป': 'Share summary', 'บันทึกรูปสรุปทริปแล้ว': 'Trip summary image saved', 'สร้างรูปสรุปไม่สำเร็จ': 'Could not create the summary image',
+  'บินวันนี้!': 'Flying today!', 'เปิดเช็คอินออนไลน์ได้แล้ว (ปกติเปิดก่อนบิน 24–48 ชม.)': 'Online check-in should be open now (usually opens 24–48hrs before departure)',
+  'ใช้ไป {a} จากงบ {b} ที่ตั้งไว้ ({p}%)': 'Spent {a} of your {b} budget ({p}%)', 'งบ {b} · ใช้ไปแล้ว {p}%': 'Budget {b} · {p}% used',
+  'ค่าใช้จ่ายรวมทั้งทริป': 'Total trip spend',
+  'อีก {n} วันจะบิน ({dir})': '{n} days to your {dir} flight',
   ' ของทุกคนในทริป': ' for everyone in the trip', 'ลบทริปแล้ว': 'Trip deleted',
   // ฟอร์มอื่น
   'แก้ไขเที่ยวบิน': 'Edit flight', 'เพิ่มเที่ยวบิน': 'Add flight', 'สถานะตั๋ว': 'Ticket status', 'สายการบิน': 'Airline', 'เช่น Thai Airways': 'e.g. Thai Airways',
@@ -588,7 +631,17 @@ const IC = {
   walk: '<circle cx="13" cy="4.5" r="1.8"/><path d="M10 21l2-6-2.5-2.5 1-5L14 10l3 1.5M9.5 7.5L7 11M12 15l2.5 6"/>',
   bus: '<rect x="4" y="3.5" width="16" height="14" rx="3"/><path d="M4 11h16M7 21v-3.5M17 21v-3.5"/><circle cx="8" cy="14.3" r=".8"/><circle cx="16" cy="14.3" r=".8"/>',
   car: '<path d="M4 16v-4l2-5h12l2 5v4z"/><path d="M4 12h16M6 16v2.5M18 16v2.5"/><circle cx="8" cy="14" r=".8"/><circle cx="16" cy="14" r=".8"/>',
-  boat: '<path d="M3 16l2.5 4h13L21 16z"/><path d="M12 16V4l6 9H12"/>'
+  boat: '<path d="M3 16l2.5 4h13L21 16z"/><path d="M12 16V4l6 9H12"/>',
+  idcard: '<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><circle cx="8" cy="12" r="2"/><path d="M13 10h6M13 14h4"/>',
+  shield: '<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/>',
+  pill: '<rect x="4" y="9" width="16" height="8" rx="4" transform="rotate(-35 12 13)"/><path d="M11 10l3 5"/>',
+  plug: '<path d="M9 3v6M15 3v6M7 9h10v3a5 5 0 01-10 0z"/><path d="M12 17v4"/>',
+  sim: '<path d="M8 3h9l3 3v15H8z"/><path d="M11 11h6M11 15h6M11 19h3"/>',
+  phone: '<path d="M5 4h4l1.5 5-2.3 1.7a12 12 0 006.1 6.1L16 15l5 1.5v4A2 2 0 0119 22 17 17 0 013 6a2 2 0 012-2z"/>',
+  siren: '<path d="M12 2v3M4.5 6l2 2M19.5 6l-2 2"/><path d="M6 21v-6a6 6 0 1112 0v6z"/><path d="M4 21h16"/>',
+  share: '<path d="M12 15V4M8 8l4-4 4 4"/><path d="M5 13v6a2 2 0 002 2h10a2 2 0 002-2v-6"/>',
+  checksq: '<rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M8 12l3 3 5-6"/>',
+  target: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r=".8"/>'
 };
 const ico = (n, s = 20) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n] || IC.dots}</svg>`;
 const CATI = { 'อาหาร': 'food', 'เดินทาง': 'train', 'ที่พัก': 'bed', 'ตั๋ว/กิจกรรม': 'ticket', 'ช้อปปิ้ง': 'bag', 'ของฝาก': 'gift', 'อื่นๆ': 'dots' };
@@ -824,6 +877,7 @@ function openForm(cfg) {
   $('#sheet').innerHTML = `<div class="shh"><button data-act="fclose">${t('ยกเลิก')}</button><b>${esc(cfg.title)}</b>
     <button class="strong" data-act="fsave">${t('บันทึก')}</button></div>
     <div class="shb">${cfg.fields.map(f => fieldHTML(f, d[f.k])).join('')}
+    ${cfg.extra || ''}
     ${cfg.onDelete ? `<button class="danger" data-act="fdel">${esc(cfg.delLabel || t('ลบรายการนี้'))}</button>` : ''}</div>`;
   if (cfg.fields.some(f => f.type === 'split')) renderSplit(d);
   applyWhen(); cfg.onChange && cfg.onChange(); updateFxHint();
@@ -957,6 +1011,7 @@ $('#sheet').addEventListener('click', async e => {
     catch (x) { toast(x.message || t('บันทึกไม่สำเร็จ')); b.disabled = false; b.textContent = t('บันทึก'); }
   }
   else if (act === 'fdel') { try { if (await FORM.onDelete() !== false) closeForm(); } catch (x) { toast(x.message); } }
+  else if (act === 'dupTrip') { if (confirm(t('ทำสำเนาทริปนี้ เอาเที่ยวบิน ที่พัก และแผนไปวันไปยังทริปใหม่? (ไม่รวมค่าใช้จ่าย เงินสด และรูป)'))) dupTrip(FORM.data.id); }
   else if (act === 'phclear') { const box = b.closest('.ph'); box.dataset.v = ''; $('.phimg', box).innerHTML = ''; b.remove(); }
   else if (act === 'fetchName') {
     const url = b.parentNode.querySelector('input').value.trim();
@@ -1189,6 +1244,66 @@ const CURS = [['JPY','JPY เยนญี่ปุ่น'],['KRW','KRW วอน
   ['EUR','EUR ยูโร'],['GBP','GBP ปอนด์'],['AUD','AUD ดอลลาร์ออสเตรเลีย'],['CHF','CHF ฟรังก์สวิส'],['THB','THB บาท']];
 const CUR_EN = { JPY: 'Japanese yen', KRW: 'Korean won', CNY: 'Chinese yuan', TWD: 'Taiwan dollar', HKD: 'Hong Kong dollar', SGD: 'Singapore dollar',
   MYR: 'Malaysian ringgit', VND: 'Vietnamese dong', LAK: 'Lao kip', USD: 'US dollar', EUR: 'Euro', GBP: 'British pound', AUD: 'Australian dollar', CHF: 'Swiss franc', THB: 'Thai baht' };
+const COUNTRIES = [['GR','กรีซ','Greece'],['KH','กัมพูชา','Cambodia'],['QA','กาตาร์','Qatar'],['KW','คูเวต','Kuwait'],['CN','จีน','China'],['CL','ชิลี','Chile'],['SA','ซาอุดีอาระเบีย','Saudi Arabia'],['JP','ญี่ปุ่น','Japan'],['TR','ตุรกี','Turkey'],['NO','นอร์เวย์','Norway'],['NZ','นิวซีแลนด์','New Zealand'],['BR','บราซิล','Brazil'],['BD','บังกลาเทศ','Bangladesh'],['PK','ปากีสถาน','Pakistan'],['FR','ฝรั่งเศส','France'],['FI','ฟินแลนด์','Finland'],['PH','ฟิลิปปินส์','Philippines'],['MY','มาเลเซีย','Malaysia'],['RU','รัสเซีย','Russia'],['LA','ลาว','Laos'],['LK','ศรีลังกา','Sri Lanka'],['CH','สวิตเซอร์แลนด์','Switzerland'],['SE','สวีเดน','Sweden'],['AE','สหรัฐอาหรับเอมิเรตส์','United Arab Emirates'],['US','สหรัฐอเมริกา','United States'],['SG','สิงคโปร์','Singapore'],['ES','สเปน','Spain'],['AT','ออสเตรีย','Austria'],['AU','ออสเตรเลีย','Australia'],['GB','อังกฤษ (สหราชอาณาจักร)','United Kingdom'],['AR','อาร์เจนตินา','Argentina'],['IT','อิตาลี','Italy'],['IN','อินเดีย','India'],['ID','อินโดนีเซีย','Indonesia'],['IL','อิสราเอล','Israel'],['EG','อียิปต์','Egypt'],['HU','ฮังการี','Hungary'],['HK','ฮ่องกง','Hong Kong'],['KR','เกาหลีใต้','South Korea'],['KE','เคนยา','Kenya'],['CZ','เช็ก','Czech Republic'],['DK','เดนมาร์ก','Denmark'],['NP','เนปาล','Nepal'],['NL','เนเธอร์แลนด์','Netherlands'],['BE','เบลเยียม','Belgium'],['PE','เปรู','Peru'],['MM','เมียนมา','Myanmar'],['MX','เม็กซิโก','Mexico'],['DE','เยอรมนี','Germany'],['VN','เวียดนาม','Vietnam'],['CA','แคนาดา','Canada'],['ZA','แอฟริกาใต้','South Africa'],['PT','โปรตุเกส','Portugal'],['PL','โปแลนด์','Poland'],['MA','โมร็อกโก','Morocco'],['RO','โรมาเนีย','Romania'],['TW','ไต้หวัน','Taiwan']];
+const EMBASSY = {
+  GR:{phone:'+30-6944-532916',city:'เอเธนส์',more:'',emg:'ฉุกเฉินรวม 112'},
+  KH:{phone:'+855-77-888-114',city:'พนมเปญ',more:'',emg:'ตำรวจ 117, ดับเพลิง 118, รถพยาบาล 119'},
+  QA:{phone:'+974-5557-8760',city:'โดฮา',more:'',emg:'ฉุกเฉินรวม 999'},
+  KW:{phone:'+965-6071-9888',city:'คูเวตซิตี',more:'',emg:'ฉุกเฉินรวม 112'},
+  CN:{phone:'+86-157-2731-2531',city:'ปักกิ่ง',more:'เซี่ยงไฮ้ +86-185-1626-8776, กว่างโจว +86-188-1938-6190, เฉิงตู +86-157-0842-8656, คุนหมิง +86-155-8700-3732, ซีอาน +86-182-0292-1281, เซี่ยเหมิน +86-181-5090-7662, หนานหนิง +86-153-0781-3559, ชิงเต่า +86-176-6751-2714',emg:'ตำรวจ 110, รถพยาบาล 120, ดับเพลิง 119'},
+  CL:{phone:'+56-9-8735-4002',city:'ซานติอาโก',more:'',emg:'ตำรวจ 133, รถพยาบาล 131'},
+  SA:{phone:'+966-55-462-2005',city:'ริยาด',more:'เจดดาห์ +966-56-808-1224',emg:'ตำรวจ 999, ดับเพลิง 998, รถพยาบาล 997'},
+  JP:{phone:'+81-90-4435-7812',city:'โตเกียว',more:'โอซาก้า +81-90-1895-0987, ฟุกุโอกะ +81-90-2585-3027',emg:'ตำรวจ 110, รถพยาบาล/ดับเพลิง 119'},
+  TR:{phone:'+90-533-641-5698',city:'อังการา',more:'',emg:'ฉุกเฉินรวม 112'},
+  NO:{phone:'+47-901-36-815',city:'ออสโล',more:'',emg:'ตำรวจ 112, ดับเพลิง 110, รถพยาบาล 113'},
+  NZ:{phone:'+64-021-896-292',city:'เวลลิงตัน',more:'',emg:'ฉุกเฉินรวม 111'},
+  BR:{phone:'+55-619-919-8763',city:'บราซิเลีย',more:'',emg:'ตำรวจ 190, รถพยาบาล 192, ดับเพลิง 193'},
+  BD:{phone:'+017-0964-0808',city:'ธากา',more:'',emg:'ฉุกเฉินรวม 999'},
+  PK:{phone:'+92-315-9009949',city:'อิสลามาบัด',more:'การาจี +92-310-814-7755',emg:'ตำรวจ 15, รถพยาบาล 1122'},
+  FR:{phone:'+33-6-46-71-96-94',city:'ปารีส',more:'',emg:'ฉุกเฉินรวม 112 (ตำรวจ 17, รถพยาบาล 15)'},
+  FI:{phone:'+358-50-312-0574',city:'เฮลซิงกิ',more:'',emg:'ฉุกเฉินรวม 112'},
+  PH:{phone:'+63-917-806-3977',city:'มะนิลา',more:'',emg:'ฉุกเฉินรวม 911'},
+  MY:{phone:'+6-017-700-4822',city:'กัวลาลัมเปอร์',more:'ปีนัง +6-012-391-4866, โกตาบารู +6-019-667-5266',emg:'ฉุกเฉินรวม 999'},
+  RU:{phone:'+7-916-939-2155',city:'มอสโก',more:'',emg:'ฉุกเฉินรวม 112'},
+  LA:{phone:'+856-20-5551-2228',city:'เวียงจันทน์',more:'สะหวันนะเขต +856-20-2271-7060',emg:'ตำรวจ 191, ดับเพลิง 190, รถพยาบาล 195'},
+  LK:{phone:'+94-77-307-0747',city:'โคลอมโบ',more:'',emg:'ตำรวจ 119, รถพยาบาล 110'},
+  CH:{phone:'+41-79-864-2674',city:'เบิร์น',more:'',emg:'ตำรวจ 117, ดับเพลิง 118, รถพยาบาล 144'},
+  SE:{phone:'+46-70-234-4191',city:'สตอกโฮล์ม',more:'',emg:'ฉุกเฉินรวม 112'},
+  AE:{phone:'+971-56-112-1348',city:'อาบูดาบี',more:'ดูไบ +971-50-652-5945',emg:'ตำรวจ 999, ดับเพลิง 997, รถพยาบาล 998'},
+  US:{phone:'+1-202-999-7690',city:'วอชิงตัน ดี.ซี.',more:'นิวยอร์ก +1-646-842-0864, ลอสแอนเจลิส +1-323-580-4222, ชิคาโก +1-773-294-5933',emg:'ฉุกเฉินรวม 911'},
+  SG:{phone:'+65-8421-0105',city:'สิงคโปร์',more:'',emg:'ตำรวจ 999, รถพยาบาล/ดับเพลิง 995'},
+  ES:{phone:'00-34-660-24-25-07',city:'มาดริด',more:'',emg:'ฉุกเฉินรวม 112'},
+  AT:{phone:'+43-664-999-0424',city:'เวียนนา',more:'',emg:'ตำรวจ 133, ดับเพลิง 122, รถพยาบาล 144'},
+  AU:{phone:'+61-402-735-642',city:'แคนเบอร์รา',more:'ซิดนีย์ +61-411-424-303',emg:'ฉุกเฉินรวม 000'},
+  GB:{phone:'+44-79186-51720',city:'ลอนดอน',more:'',emg:'ฉุกเฉินรวม 999 หรือ 112'},
+  AR:{phone:'+54-911-4080-2185',city:'บัวโนสไอเรส',more:'',emg:'ฉุกเฉินรวม 911'},
+  IT:{phone:'+39-333-8518-071',city:'โรม',more:'',emg:'ฉุกเฉินรวม 112'},
+  IN:{phone:'+91-95-9932-1484',city:'นิวเดลี',more:'มุมไบ +91-98202-93349, โกลกาตา +91-98302-60382, เจนไน +91-97-9083-1391',emg:'ฉุกเฉินรวม 112'},
+  ID:{phone:'+62-811-186-253',city:'จาการ์ตา',more:'',emg:'ตำรวจ 110, ดับเพลิง 113, รถพยาบาล 118/119'},
+  IL:{phone:'+972-54-636-8150',city:'เทลอาวีฟ',more:'',emg:'ตำรวจ 100, รถพยาบาล 101, ดับเพลิง 102'},
+  EG:{phone:'+201-0194-01243',city:'ไคโร',more:'',emg:'ตำรวจ 122, รถพยาบาล 123'},
+  HU:{phone:'+36-30-507-8517',city:'บูดาเปสต์',more:'',emg:'ฉุกเฉินรวม 112'},
+  HK:{phone:'+852-6821-1545',city:'ฮ่องกง',more:'อีกสาย +852-6821-1546',emg:'ฉุกเฉินรวม 999'},
+  KR:{phone:'+82-10-7275-2955',city:'โซล',more:'',emg:'ฉุกเฉินรวม 112 (ตำรวจ), 119 (รถพยาบาล/ดับเพลิง)'},
+  KE:{phone:'+254-733-145-145',city:'ไนโรบี',more:'',emg:'ฉุกเฉินรวม 999 หรือ 112'},
+  CZ:{phone:'+420-721-776-717',city:'ปราก',more:'',emg:'ฉุกเฉินรวม 112'},
+  DK:{phone:'+45-91-80-72-36',city:'โคเปนเฮเกน',more:'',emg:'ฉุกเฉินรวม 112'},
+  NP:{phone:'+977-980-106-9233',city:'กาฐมาณฑุ',more:'',emg:'ตำรวจ 100, ดับเพลิง 101, รถพยาบาล 102'},
+  NL:{phone:'+31-6-23669832',city:'เดอะเฮก',more:'',emg:'ฉุกเฉินรวม 112'},
+  BE:{phone:'+32-470-859-667',city:'บรัสเซลส์',more:'',emg:'ฉุกเฉินรวม 112'},
+  PE:{phone:'+51-940-383-185',city:'ลิมา',more:'',emg:'ตำรวจ 105, รถพยาบาล 106'},
+  MM:{phone:'+95-979-700-2801',city:'ย่างกุ้ง',more:'',emg:'ดับเพลิง 191, รถพยาบาล 192, ตำรวจ 199'},
+  MX:{phone:'+52-1-55-2564-2662',city:'เม็กซิโกซิตี',more:'',emg:'ฉุกเฉินรวม 911'},
+  DE:{phone:'+49-152-035-1913',city:'เบอร์ลิน',more:'แฟรงก์เฟิร์ต +49-174-352-3033, มิวนิก +49-1520-212-5038',emg:'ตำรวจ 110, รถพยาบาล/ดับเพลิง 112'},
+  VN:{phone:'+84-904-544-800',city:'ฮานอย',more:'โฮจิมินห์ +84-366-332-071',emg:'ตำรวจ 113, รถพยาบาล 115, ดับเพลิง 114'},
+  CA:{phone:'+1-613-853-2650',city:'ออตตาวา',more:'แวนคูเวอร์ +1-778-984-9055',emg:'ฉุกเฉินรวม 911'},
+  ZA:{phone:'+27-82-923-6179',city:'พริทอเรีย',more:'',emg:'ตำรวจ 10111, รถพยาบาล 10177, มือถือ 112'},
+  PT:{phone:'+351-968-771-843',city:'ลิสบอน',more:'',emg:'ฉุกเฉินรวม 112'},
+  PL:{phone:'+48-696-642-348',city:'วอร์ซอ',more:'',emg:'ฉุกเฉินรวม 112'},
+  MA:{phone:'+212-661-899-597',city:'ราบัต',more:'',emg:'ตำรวจ 19, รถพยาบาล 15'},
+  RO:{phone:'+40-725-197-860',city:'บูคาเรสต์',more:'',emg:'ฉุกเฉินรวม 112'},
+  TW:{phone:'+886-952-238-931',city:'ไทเป',more:'',emg:'ตำรวจ 110, รถพยาบาล/ดับเพลิง 119'}
+};
 const METHODS = ['เงินสด','บัตรเครดิต','Travel card','โอน/QR'];
 const TC_PRE = 'ใช้ยอดที่แลกไว้', TC_AUTO = 'ตัดเงินบาทอัตโนมัติ';
 const tcAuto = e => e.method === 'Travel card' && e.tcMode === TC_AUTO;
@@ -1443,13 +1558,38 @@ function renderTrips() {
 
 /* ----- ภาพรวม ----- */
 const nights = s => s.checkin && s.checkout ? Math.max(0, Math.round((new Date(s.checkout) - new Date(s.checkin)) / 864e5)) : 0;
+function flightBanner(fl) {
+  const now = new Date();
+  const upcoming = fl.map(f => ({ f, dt: f.date ? new Date(f.date + 'T' + (f.dep || '00:00')) : null })).filter(x => x.dt && x.dt >= now).sort((a, b) => a.dt - b.dt)[0];
+  if (!upcoming) return '';
+  const { f, dt } = upcoming;
+  const hrs = (dt - now) / 36e5;
+  const canCheckin = hrs <= 48 && f.status !== 'เช็คอินแล้ว';
+  const label = hrs < 20 ? t('บินวันนี้!') : tf('อีก {n} วันจะบิน ({dir})', { n: Math.ceil(hrs / 24), dir: t(f.dir) });
+  return `<div class="callout${canCheckin ? ' urge' : ''}">
+    <span class="co-ic">${ico(canCheckin ? 'siren' : 'clock', 20)}</span>
+    <div class="co-tx"><b>${esc(label)}</b>${canCheckin ? `<div>${t('เปิดเช็คอินออนไลน์ได้แล้ว (ปกติเปิดก่อนบิน 24–48 ชม.)')}</div>` : ''}</div>
+  </div>`;
+}
 function viewOverview(x) {
   const fl = of('flight').sort((a, b) => ((a.date || '') + (a.dep || '')).localeCompare((b.date || '') + (b.dep || '')));
   const st = of('stay').sort((a, b) => (a.checkin || '').localeCompare(b.checkin || ''));
+  const chk = of('check');
+  const contacts = of('contact');
   const pre = fl.reduce((a, f) => a + (+f.price || 0), 0) + st.reduce((a, s) => a + (+s.price || 0), 0);
+  const spentThb = pre + (isFx() ? expenseItems().reduce((a, e) => a + thbOf(e), 0) : expenseItems().reduce((a, e) => a + e.amount, 0));
   const okF = s => s === 'ซื้อตั๋วแล้ว' || s === 'เช็คอินแล้ว';
   const add = act => `<button class="link" data-act="${act}">${ico('plus', 16)}${t('เพิ่ม')}</button>`;
   return `
+  ${flightBanner(fl)}
+  <div class="block">${head('checksq', t('เช็คลิสต์ก่อนไป'), t('ติ๊กให้ครบก่อนออกเดินทาง'), add('addCheck'))}
+  ${chk.length ? chk.map(c => `<div class="checkrow${c.done ? ' done' : ''} tap" data-act="toggleCheck" data-id="${esc(c.id)}">
+      <span class="cbox">${c.done ? ico('checksq', 20) : ''}</span>
+      <span class="cic">${ico(c.icon || 'dots', 18)}</span>
+      <span class="ct">${esc(t(c.title))}</span>
+      <button type="button" class="ib sm" data-act="editCheck" data-id="${esc(c.id)}" aria-label="${t('แก้ไข')}">${ico('edit', 15)}</button>
+    </div>`).join('') : `<div class="empty">${t('ยังไม่มีรายการ')}</div>`}
+  </div>
   <div class="block">${head('plane', t('เที่ยวบิน'), t('ตั๋ว เวลา และบอร์ดดิ้งพาส'), add('addFlight'))}
   ${fl.length ? fl.map(f => `<div class="ticket tap" data-act="editFlight" data-id="${esc(f.id)}">
       <div class="tk-top"><span>${esc(t(f.dir))}, ${wday(f.date)} ${fmtD(f.date)}</span><span class="pill ${okF(f.status) ? 'ok' : 'no'}">${esc(t(f.status))}</span></div>
@@ -1471,11 +1611,25 @@ function viewOverview(x) {
       ${s.photo || s.maps || s.name ? `<div class="acts">${thumb(s.photo)}${extLink(s.maps ? safeUrl(s.maps) : mapSearchLink(s.name), 'pin', t('แผนที่'))}</div>` : ''}
     </div>`).join('') : `<div class="empty">${t('ยังไม่มีที่พัก')}</div>`}
   </div>
-  <div class="block">${head('receipt', t('สรุปทริป'), t('ยอดจองล่วงหน้ากับค่าใช้จ่ายระหว่างทริป'))}<div class="kv">
+  <div class="block">${head('siren', t('เบอร์ฉุกเฉิน'), t('สถานทูตไทยและเบอร์ฉุกเฉินท้องถิ่น'), add('addContact'))}
+  ${contacts.length ? contacts.map(c => `<div class="ticket">
+      <div class="tt serif" style="font-size:17px">${esc(t(c.title))}</div>
+      ${c.phone ? `<a class="callnum" href="tel:${esc(String(c.phone).replace(/[^0-9+]/g, ''))}">${ico('phone', 16)}${esc(c.phone)}</a>` : ''}
+      ${c.note ? `<div class="nt">${esc(c.note)}</div>` : ''}
+      <div class="acts"><button type="button" class="ghost" data-act="editContact" data-id="${esc(c.id)}">${ico('edit', 15)}${t('แก้ไข')}</button></div>
+    </div>`).join('') : `<div class="empty">${t('ยังไม่มีเบอร์ติดต่อฉุกเฉิน')}<br>${t('เลือกประเทศตอนแก้ไขทริป แอปจะเติมให้อัตโนมัติ')}</div>`}
+  </div>
+  <div class="block">${head('receipt', t('สรุปทริป'), t('ยอดจองล่วงหน้ากับค่าใช้จ่ายระหว่างทริป'), `<button class="link" data-act="shareSummary">${ico('share', 16)}${t('แชร์สรุป')}</button>`)}<div class="kv">
     <span>${t('ตั๋วและที่พักที่จองไว้')}</span><b class="num">${baht(pre)}</b>
     <span>${t('ค่าใช้จ่ายระหว่างทริป')}</span><b class="num">${tm(expenseItems().reduce((a, e) => a + e.amount, 0))}</b>
     ${isFx() ? `<span>${t('คิดเป็นเงินบาท')}</span><b class="num">≈ ${baht(expenseItems().reduce((a, e) => a + thbOf(e), 0))}</b>` : ''}</div>
+    ${x.budget > 0 ? budgetBar(x, spentThb) : ''}
     ${isFx() ? `<div class="tiny" style="margin-top:12px">${t('สกุลเงิน')}: ${tf('{c}, เรทประมาณ 1 = {r} บาท', { c: esc(x.currency), r: fmtRate(+x.rate || 0) })}</div>` : ''}</div>`;
+}
+function budgetBar(x, spent) {
+  const pct = Math.min(100, Math.round(spent / x.budget * 100)), over = spent > x.budget;
+  return `<div class="bbar"><div class="bb-track"><div class="bb-fill${over ? ' over' : ''}" style="width:${pct}%"></div></div>
+    <div class="tiny">${tf('ใช้ไป {a} จากงบ {b} ที่ตั้งไว้ ({p}%)', { a: baht(spent), b: baht(x.budget), p: pct })}</div></div>`;
 }
 
 /* ----- แผนรายวัน ----- */
@@ -1747,35 +1901,79 @@ function tripForm(x) {
       { k: 'name', label: t('ชื่อทริป'), ph: t('เช่น โตเกียว ใบไม้เปลี่ยนสี') },
       { k: 'scope', label: t('ประเภท'), type: 'seg', options: ['ต่างประเทศ', 'ในประเทศ'] },
       { k: 'dest', label: t('ปลายทาง'), ph: t('เช่น โตเกียว–เกียวโต, เชียงใหม่') },
+      { k: 'country', label: t('ประเทศ (ใช้เติมเบอร์ฉุกเฉิน/สถานทูตไทยให้อัตโนมัติ)'), type: 'select', raw: true,
+        options: [['', t('— เลือกประเทศ —')], ...COUNTRIES.map(([c, th, en]) => [c, LANG === 'en' ? en : th])], when: ['scope', 'ต่างประเทศ'] },
       { k: 'start', label: t('วันเริ่มทริป'), type: 'date' },
       { k: 'end', label: t('วันจบทริป'), type: 'date' },
       { k: 'membersText', label: t(isNew ? 'คนที่ไป คั่นด้วย , (ชื่อแรกคือคุณ ใช้ชื่อที่เพื่อนเรียก)' : 'คนที่ไป คั่นด้วย ,'), ph: t('เช่น ท็อป, อั้ม, บีม') },
       ...(isNew ? [{ k: 'info', type: 'note', text: t('เพื่อนที่ยังไม่มีบัญชีก็ใส่ชื่อไว้ก่อนได้ บันทึกทริปแล้วกดปุ่มแชร์เพื่อส่งโค้ดให้เพื่อนเข้ามาเลือกชื่อตัวเอง') }] : []),
       { k: 'currency', label: t('สกุลเงินของประเทศที่ไป'), type: 'select', raw: true, options: CURS.map(([k, l]) => [k, LANG === 'en' ? `${k} ${CUR_EN[k]}` : l]), when: ['scope', 'ต่างประเทศ'] },
       { k: 'rate', label: t('เรทประมาณ: 1 หน่วย = กี่บาท (เว้นว่างไว้ แอปดึงเรทวันนี้ให้)'), type: 'number', when: ['scope', 'ต่างประเทศ'] },
-      { k: 'mapProvider', label: t('แผนที่นำทาง (บางประเทศเช่นจีนเปิด Google Maps ไม่ได้ ให้ใช้ Apple Maps แทน)'), type: 'seg', options: ['Google Maps', 'Apple Maps'] }
+      { k: 'mapProvider', label: t('แผนที่นำทาง (บางประเทศเช่นจีนเปิด Google Maps ไม่ได้ ให้ใช้ Apple Maps แทน)'), type: 'seg', options: ['Google Maps', 'Apple Maps'] },
+      { k: 'budget', label: t('งบประมาณทั้งทริป (บาท, ไม่ใส่ก็ได้)'), type: 'number', ph: t('เช่น 20000') }
     ],
     validate: o => !o.name ? t('ใส่ชื่อทริป') : !o.start || !o.end ? t('ใส่วันเริ่มและวันจบ') : o.end < o.start ? t('วันจบต้องไม่ก่อนวันเริ่ม') : '',
     onSave: async o => {
       o.members = [...new Set(o.membersText.split(/[,，]/).map(s => s.trim()).filter(Boolean))];
       if (!o.members.length) o.members = [ME.username];
       delete o.membersText; o.kind = 'trip';
-      if (o.scope === 'ในประเทศ') o.currency = 'THB';
+      if (o.scope === 'ในประเทศ') { o.currency = 'THB'; o.country = ''; }
       if (o.currency === 'THB') o.rate = 1;
       else if (!(o.rate > 0)) {
         try { o.rate = (await run('getRate', o.currency)).rate; }
         catch (y) { throw new Error(t('ดึงเรทวันนี้ไม่ได้ ใส่เรทประมาณเองก่อน')); }
       }
       const r = await run('saveRec', o);
-      if (isNew) { navPush(); T.id = r.id; T.recs = [r]; T.thumbs = {}; T.rates = {}; T.sub = 'overview'; T.day = 0; } else upsert(r);
+      if (isNew) {
+        navPush(); T.id = r.id; T.recs = [r]; T.thumbs = {}; T.rates = {}; T.sub = 'overview'; T.day = 0;
+        await addDefaultChecklist(r); await addDefaultContacts(r);
+      } else upsert(r);
       renderTrips(); toast(t('บันทึกทริปแล้ว'));
     },
     delLabel: t('ลบทริปนี้ทั้งหมด'),
     onDelete: isNew ? null : async () => {
       if (!confirm(tf('ลบทริป "{x}" ทั้งหมด รวมแผน ค่าใช้จ่าย และรูป{y}?\nกู้คืนไม่ได้', { x: x.name, y: shared(x) ? t(' ของทุกคนในทริป') : '' }))) return false;
       await run('deleteRec', x.id); closeForm(); goList(); toast(t('ลบทริปแล้ว'));
-    }
+    },
+    extra: isNew ? '' : `<button type="button" class="ghost" data-act="dupTrip">${ico('copy', 16)}${t('ทำสำเนาทริปนี้ (เอาแผนไปใช้กับทริปใหม่)')}</button>`
   });
+}
+// เพิ่มเช็คลิสต์ตั้งต้นให้ทริปใหม่ (ในประเทศได้ชุดสั้น ต่างประเทศได้ชุดเต็ม)
+const CHECK_COMMON = [['ยาประจำตัว', 'pill'], ['ที่ชาร์จ/พาวเวอร์แบงก์', 'plug']];
+const CHECK_ABROAD = [['พาสปอร์ต / วีซ่า', 'idcard'], ['ประกันเดินทาง', 'shield'], ['ซิม/eSIM เน็ตต่างประเทศ', 'sim'], ['แจ้งธนาคารก่อนใช้บัตรต่างประเทศ', 'card']];
+async function addDefaultChecklist(trip) {
+  const items = trip.scope === 'ต่างประเทศ' ? [...CHECK_ABROAD, ...CHECK_COMMON] : CHECK_COMMON;
+  for (const [title, icon] of items) {
+    try { const r = await run('saveRec', { kind: 'check', tripId: trip.id, title, icon, done: false }); upsert(r); } catch (e) {}
+  }
+}
+// เพิ่มเบอร์ฉุกเฉิน/สถานทูตไทยอัตโนมัติ ตามประเทศที่เลือกตอนสร้างทริป
+async function addDefaultContacts(trip) {
+  if (trip.scope !== 'ต่างประเทศ') return;
+  const contacts = [];
+  const e = EMBASSY[trip.country];
+  if (e) {
+    contacts.push({ title: t('สถานทูตไทย'), phone: e.phone, note: tf('{c}{m}', { c: e.city, m: e.more ? ' · ' + e.more : '' }) });
+    contacts.push({ title: t('เบอร์ฉุกเฉินท้องถิ่น'), phone: e.emg.match(/\d[\d\/]*\d|\d/)?.[0] || '', note: e.emg });
+  }
+  contacts.push({ title: t('กรมการกงสุล (Call Center 24 ชม.)'), phone: '+66-2-572-8442', note: t('โทรจากไทย 0-2572-8442') });
+  for (const c of contacts) {
+    try { const r = await run('saveRec', { kind: 'contact', tripId: trip.id, ...c }); upsert(r); } catch (e2) {}
+  }
+}
+async function dupTrip(tripId) {
+  try {
+    const r = await run('duplicateTrip', tripId);
+    closeForm(); renderTrips(); await openTrip(r.id);
+    toast(t('ทำสำเนาทริปแล้ว เที่ยวบิน/ที่พัก/แผนถูกคัดลอกมาให้ (ไม่รวมค่าใช้จ่ายและรูป)'));
+  } catch (x) { toast(x.message); }
+}
+async function dupTrip(tripId) {
+  try {
+    const r = await run('duplicateTrip', tripId);
+    closeForm(); renderTrips(); await openTrip(r.id);
+    toast(t('ทำสำเนาทริปแล้ว เที่ยวบิน/ที่พัก/แผนถูกคัดลอกมาให้ (ไม่รวมค่าใช้จ่ายและรูป)'));
+  } catch (x) { toast(x.message); }
 }
 function flightForm(f) {
   const x = trip();
@@ -1817,6 +2015,96 @@ function stayForm(s) {
     validate: o => !o.name ? t('ใส่ชื่อที่พัก') : o.checkout && o.checkin && o.checkout < o.checkin ? t('วันเช็คเอาท์ต้องหลังเช็คอิน') : '',
     onSave: saver('stay'), onDelete: s ? deleter(s.id) : null
   });
+}
+function checkForm(c) {
+  openForm({
+    title: t(c ? 'แก้ไขรายการ' : 'เพิ่มรายการเช็คลิสต์'), data: c || { icon: 'dots' },
+    fields: [
+      { k: 'title', label: t('ชื่อรายการ'), ph: t('เช่น จองรถเช่า') },
+      { k: 'icon', label: t('ไอคอน'), type: 'select', raw: true, options: [['dots','อื่นๆ'],['idcard','พาสปอร์ต/บัตร'],['shield','ประกัน'],['pill','ยา'],['plug','ปลั๊กแปลง'],['sim','ซิม/eSIM'],['card','บัตร/ธนาคาร'],['bag','กระเป๋า']] }
+    ],
+    validate: o => !o.title && t('ใส่ชื่อรายการ'),
+    onSave: async o => { o.done = (c && c.done) || false; return saver('check')(o); },
+    onDelete: c ? deleter(c.id) : null
+  });
+}
+function toggleCheck(id) {
+  const c = rec(id); if (!c) return;
+  saver('check')({ ...c, done: !c.done });
+}
+function contactForm(c) {
+  openForm({
+    title: t(c ? 'แก้ไขเบอร์ติดต่อ' : 'เพิ่มเบอร์ติดต่อฉุกเฉิน'), data: c || {},
+    fields: [
+      { k: 'title', label: t('ชื่อ'), ph: t('เช่น สถานทูตไทย, โรงพยาบาลใกล้ที่พัก') },
+      { k: 'phone', label: t('เบอร์โทร'), ph: t('เช่น +81-90-4435-7812') },
+      { k: 'note', label: t('โน้ต / เวลาติดต่อ'), type: 'textarea', ph: t('เช่น Hotline ฉุกเฉิน 24 ชม.') }
+    ],
+    validate: o => !o.title && t('ใส่ชื่อผู้ติดต่อ'),
+    onSave: saver('contact'), onDelete: c ? deleter(c.id) : null
+  });
+}
+function cssVar(n) { return (getComputedStyle(document.documentElement).getPropertyValue(n) || '').trim(); }
+function fitText(g, s, maxW) { s = String(s); while (g.measureText(s).width > maxW && s.length > 1) s = s.slice(0, -2) + '…'; return s; }
+async function shareSummary() {
+  try {
+    const x = trip();
+    const items = expenseItems();
+    const totalThb = isFx() ? items.reduce((a, e) => a + thbOf(e), 0) : items.reduce((a, e) => a + e.amount, 0);
+    const fl = of('flight'), st = of('stay');
+    const pre = fl.reduce((a, f) => a + (+f.price || 0), 0) + st.reduce((a, s) => a + (+s.price || 0), 0);
+    const grand = pre + totalThb;
+    const { bal } = balances();
+    const cats = catStats().slice(0, 3);
+    const bg = cssVar('--bg') || '#F5EDD6', surf = cssVar('--surface') || '#FBF7EA', ink = cssVar('--ink') || '#23291F',
+      ink2 = cssVar('--ink2') || '#5B6453', brand = cssVar('--brand') || '#7E9B75', brandInk = cssVar('--brand-ink') || '#44603E',
+      onBrand = cssVar('--on-brand') || '#FBF7EA';
+    const W = 1080, H = 1400;
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    const g = cv.getContext('2d');
+    g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    g.textBaseline = 'alphabetic';
+    g.fillStyle = ink2; g.font = '600 26px sans-serif'; g.fillText('Split&Go', 64, 84);
+    g.fillStyle = ink; g.font = '700 54px "Noto Serif Thai","Noto Serif",Georgia,serif';
+    g.fillText(fitText(g, x.name || '', W - 128), 64, 160);
+    g.fillStyle = ink2; g.font = '28px sans-serif';
+    g.fillText(`${fmtD(x.start)} – ${fmtD(x.end)}`, 64, 205);
+    g.fillStyle = brand; g.beginPath(); g.roundRect ? g.roundRect(64, 240, W - 128, 190, 20) : g.rect(64, 240, W - 128, 190); g.fill();
+    g.fillStyle = onBrand; g.font = '26px sans-serif'; g.fillText(t('ค่าใช้จ่ายรวมทั้งทริป'), 96, 292);
+    g.font = '700 66px "Noto Serif Thai","Noto Serif",Georgia,serif'; g.fillText(baht(grand), 96, 380);
+    let y = 480;
+    if (x.budget > 0) {
+      const pct = Math.round(grand / x.budget * 100);
+      g.fillStyle = ink; g.font = '600 28px sans-serif';
+      g.fillText(tf('งบ {b} · ใช้ไปแล้ว {p}%', { b: baht(x.budget), p: pct }), 64, y); y += 56;
+    }
+    const balEntries = Object.entries(bal).filter(([, v]) => Math.abs(v) > .5);
+    if (balEntries.length) {
+      g.fillStyle = ink; g.font = '700 34px "Noto Serif Thai","Noto Serif",Georgia,serif'; g.fillText(t('ใครจ่าย ใครใช้'), 64, y); y += 48;
+      g.font = '27px sans-serif';
+      balEntries.forEach(([name, v]) => {
+        g.fillStyle = v >= 0 ? brandInk : '#B4413A';
+        const label = name + '  ' + (v >= 0 ? tf('ได้คืน {x}', { x: baht(v) }) : tf('ค้าง {x}', { x: baht(-v) }));
+        g.fillText(fitText(g, label, W - 128), 64, y); y += 44;
+      });
+      y += 16;
+    }
+    if (cats.length) {
+      g.fillStyle = ink; g.font = '700 34px "Noto Serif Thai","Noto Serif",Georgia,serif'; g.fillText(t('ใช้จ่ายไปกับอะไร'), 64, y); y += 48;
+      g.fillStyle = ink2; g.font = '27px sans-serif';
+      cats.forEach(([c, , thb]) => { g.fillText(fitText(g, `${t(c)} — ${baht(thb)}`, W - 128), 64, y); y += 44; });
+    }
+    g.fillStyle = cssVar('--ink3') || '#8C9280'; g.font = '22px sans-serif'; g.fillText('Split&Go', 64, H - 40);
+    cv.toBlob(async blob => {
+      if (!blob) return toast(t('สร้างรูปสรุปไม่สำเร็จ'));
+      const file = new File([blob], 'trip-summary.png', { type: 'image/png' });
+      try { if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: x.name }); return; } } catch (e) {}
+      const url = URL.createObjectURL(blob), a = document.createElement('a');
+      a.href = url; a.download = 'trip-summary.png'; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+      toast(t('บันทึกรูปสรุปทริปแล้ว'));
+    }, 'image/png');
+  } catch (e) { toast(t('สร้างรูปสรุปไม่สำเร็จ')); }
 }
 function stopForm(s) {
   openForm({
@@ -2069,6 +2357,9 @@ $('#trips').addEventListener('click', e => {
     catAll: () => { T.catAll = !T.catAll; renderTrips(); },
     editSettle: () => settleForm(rec(id)),
     addTopup: () => topupForm(), editTopup: () => topupForm(rec(id)),
+    addCheck: () => checkForm(), editCheck: () => checkForm(rec(id)), toggleCheck: () => toggleCheck(id),
+    addContact: () => contactForm(), editContact: () => contactForm(rec(id)),
+    shareSummary: () => shareSummary(),
     view: () => viewPhoto(id)
   };
   acts[b.dataset.act] && acts[b.dataset.act]();

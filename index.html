@@ -219,27 +219,31 @@ button.leg{width:100%;border:0;background:none;text-align:left}
 .tiny{font-size:12px;color:var(--ink3);margin-top:6px}
 .sheet-bg{position:fixed;inset:0;background:rgba(20,26,19,.42);display:none;z-index:60;align-items:flex-end;cursor:pointer}
 .sheet-bg.show{display:flex}
-.sheet{background:var(--surface);width:100%;max-width:520px;margin:0 auto;border-radius:28px 28px 0 0;max-height:calc(100dvh - env(safe-area-inset-top) - 64px);display:flex;flex-direction:column;animation:up .22s ease-out;cursor:auto;touch-action:pan-y;will-change:transform}
+.sheet{background:var(--surface);width:100%;max-width:520px;margin:0 auto;border-radius:28px 28px 0 0;max-height:calc(100dvh - env(safe-area-inset-top) - 64px);display:flex;flex-direction:column;animation:up .22s ease-out;cursor:auto}
 @keyframes up{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}
+.sheet.noanim{animation:none}
 .shh{display:grid;grid-template-columns:72px 1fr 72px;align-items:center;padding:14px 16px 10px;text-align:center}
 .shh::before{content:"";position:absolute;left:50%;margin-left:-18px;margin-top:-26px;width:36px;height:4px;border-radius:2px;background:var(--line)}
 .shh b{font-family:var(--serif);font-weight:600;font-size:17px}
 .shh button{border:0;background:none;font-size:16px;color:var(--ink2);padding:10px 6px;min-height:44px;min-width:56px;text-align:left}
 .shh{touch-action:none}
 .shh .strong{color:var(--brand-ink);font-weight:600;text-align:right}
-.shb{overflow-y:auto;padding:8px 20px calc(env(safe-area-inset-bottom) + 24px);-webkit-overflow-scrolling:touch}
+.shb{overflow-y:auto;overscroll-behavior:contain;padding:8px 20px calc(env(safe-area-inset-bottom) + 24px)}
 .shb .block{box-shadow:none;background:var(--bg)}
 .shb .block .ghost{background:var(--surface)}
 .fld{margin-bottom:14px}
 .fl{display:block;font-size:13px;color:var(--ink2);margin-bottom:6px}
 .fld input,.fld select,.fld textarea{width:100%;border:0;background:var(--sunk);border-radius:12px;padding:12px;font-size:16px;min-height:48px}
-.fld textarea{min-height:76px;resize:vertical}
+.fld textarea{min-height:76px;resize:none;overflow:hidden;line-height:1.5}
 .fld .amtin{font-family:var(--serif);font-size:28px;font-weight:600;min-height:60px}
 input[type=date],input[type=time]{-webkit-appearance:none;appearance:none}
 .mrow{display:grid;grid-template-columns:1fr auto;gap:8px}
 .mrow button{border:0;background:var(--brand-ink);color:var(--on-brand);border-radius:12px;padding:0 16px;font-size:14px;font-weight:600}
 .ph{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.ph.busy{opacity:.45;pointer-events:none}
+.ph.busy{pointer-events:none}
+.ph.busy .phbtn{opacity:.5}
+.uping{font-size:14px;color:var(--brand-ink);display:flex;align-items:center;gap:8px}
+.uping::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--brand);animation:blink 1s ease-in-out infinite}
 .phbtn{border:1.5px dashed var(--line);border-radius:12px;padding:10px 14px;font-size:15px;display:inline-flex;align-items:center;gap:8px;color:var(--ink2)}
 .phimg img{width:88px;height:66px;object-fit:cover;border-radius:12px;display:block}
 .prow{display:grid;grid-template-columns:1fr 120px;gap:8px;align-items:center;margin-top:8px}
@@ -344,6 +348,7 @@ const EN = {
   'อ่านรูปนี้ไม่ได้ ลองเลือกรูปอื่น หรือแคปหน้าจอแล้วแนบแทน': 'Can\'t read this photo. Try another one, or attach a screenshot of it.',
   'เอา "{x}" ออกจากทริป?\nรายการที่หารเท่ากันจะหารกับคนที่เหลือแทน': 'Remove "{x}" from the trip?\nEqual splits will be shared among the others.',
   'เอาออกจากทริปแล้ว': 'Removed from the trip', 'คนที่ไม่ได้ไป เอาออกได้ ถ้าเขาไม่ได้เป็นคนจ่ายรายการไหน': 'Remove anyone who didn\'t go, as long as they didn\'t pay for anything.',
+  'รอรูป…': 'Waiting for photo…', 'กำลังอัปโหลดรูป…': 'Uploading photo…',
   'บันทึก': 'Save', 'กำลังบันทึก…': 'Saving…', 'บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง': 'Could not save, please try again', 'ลบไม่สำเร็จ ลองใหม่อีกครั้ง': 'Could not delete, please try again', 'ยกเลิก': 'Cancel', 'ปิด': 'Close', 'ลบรายการนี้': 'Delete', 'เพิ่ม': 'Add', 'รอสักครู่': 'Please wait',
   'กำลังโหลด…': 'Loading…', 'กำลังเปิดทริป…': 'Opening trip…', 'ลองใหม่': 'Try again', 'บันทึกแล้ว': 'Saved', 'ลบแล้ว': 'Deleted',
   'ลบรายการนี้?': 'Delete this item?', 'บันทึกไม่สำเร็จ': 'Could not save', 'โหลดทริปไม่สำเร็จ': 'Could not load trips',
@@ -711,7 +716,7 @@ function goList(fromNav) {
 
 /* ---------- บัญชีของฉัน ---------- */
 function openPanel(title, html) {
-  if (!$('#sheetBg').classList.contains('show')) navPush();
+  if (!$('#sheetBg').classList.contains('show')) { navPush(); $('#sheet').classList.remove('noanim'); }
   FORM = null;
   $('#sheet').innerHTML = `<div class="shh"><button data-act="fclose">${t('ปิด')}</button><b>${esc(title)}</b><span></span></div>
     <div class="shb" id="panelBody">${html}</div>`;
@@ -779,7 +784,7 @@ document.addEventListener('contextmenu', e => { if (e.target.closest('.chip[data
 ================================================= */
 let FORM = null;
 function openForm(cfg) {
-  if (!$('#sheetBg').classList.contains('show')) navPush();
+  if (!$('#sheetBg').classList.contains('show')) { navPush(); $('#sheet').classList.remove('noanim'); }
   FORM = cfg;
   const d = cfg.data || {};
   $('#sheet').innerHTML = `<div class="shh"><button data-act="fclose">${t('ยกเลิก')}</button><b>${esc(cfg.title)}</b>
@@ -789,11 +794,13 @@ function openForm(cfg) {
   if (cfg.fields.some(f => f.type === 'split')) renderSplit(d);
   applyWhen(); cfg.onChange && cfg.onChange(); updateFxHint();
   fillThumbs($('#sheet'));
+  requestAnimationFrame(() => $$('#sheet textarea').forEach(growTa));
   $('#sheetBg').classList.add('show'); lockScroll(true); renderFab();
 }
+$('#sheet').addEventListener('animationend', () => $('#sheet').classList.add('noanim'));
 function closeForm(fromNav) {
   const was = $('#sheetBg').classList.contains('show');
-  $('#sheet').style.transform = '';
+  $('#sheet').style.transform = ''; $('#sheet').style.transition = ''; $('#sheet').classList.remove('noanim');
   $('#sheetBg').classList.remove('show'); FORM = null; lockScroll(false); renderFab();
   if (was && fromNav !== true) navPop();
 }
@@ -897,6 +904,12 @@ $('#sheet').addEventListener('click', async e => {
   const act = b.dataset.act;
   if (act === 'fclose') closeForm();
   else if (act === 'fsave') {
+    if (FORM.uploads && FORM.uploads.size) {
+      const f = FORM; b.disabled = true; b.textContent = t('รอรูป…');
+      await Promise.allSettled([...f.uploads]);
+      b.disabled = false; b.textContent = t('บันทึก');
+      if (FORM !== f) return;
+    }
     const o = readForm();
     const err = FORM.validate && FORM.validate(o);
     if (err) return toast(err);
@@ -960,7 +973,9 @@ async function copyText(x) {
   try { await navigator.clipboard.writeText(x); toast(t('คัดลอกแล้ว วางส่งให้เพื่อนได้เลย')); }
   catch (e) { prompt(t('คัดลอกข้อความนี้ไปส่งให้เพื่อน:'), x); }
 }
+function growTa(el) { el.style.height = 'auto'; el.style.height = Math.max(76, el.scrollHeight + 2) + 'px'; }
 $('#sheet').addEventListener('input', e => {
+  if (e.target.tagName === 'TEXTAREA') growTa(e.target);
   if (e.target.name === 'amount' || e.target.name === 'cost' || e.target.dataset.p !== undefined) updateSplitHint();
   if (e.target.name === 'amount' || e.target.name === 'cost') autoTc();
   if (['amount', 'cost', 'thbActual'].includes(e.target.name)) updateFxHint();
@@ -1002,6 +1017,9 @@ function autoTc() {
   applyWhen();
 }
 $('#sheetBg').addEventListener('click', e => { if (e.target.id === 'sheetBg') closeForm(); });
+// ปิดฟอร์มแล้ว ถ้ามีข้อมูลใหม่ค้างรอไว้ ดึงมาเลย
+new MutationObserver(() => { if (!$('#sheetBg').classList.contains('show') && T.needReload && !SYNC) { T.needReload = false; setTimeout(reloadTrip, 200); } })
+  .observe($('#sheetBg'), { attributes: true, attributeFilter: ['class'] });
 
 /* ---------- รูป ---------- */
 function loadImg(file) {
@@ -1028,14 +1046,21 @@ function toJpeg(img, max, q) {
   if (!/^data:image\/jpeg;base64,/.test(out) || out.length < 1200) throw new Error('bad');
   return out;
 }
-async function handlePhoto(input) {
+function handlePhoto(input) {
+  const f = FORM, p = uploadPhoto(input);
+  if (f) { f.uploads = f.uploads || new Set(); f.uploads.add(p); p.finally(() => f.uploads.delete(p)); }
+  return p;
+}
+async function uploadPhoto(input) {
   const file = input.files[0]; if (!file) return;
   const box = input.closest('.ph'); box.classList.add('busy');
+  const holder = $('.phimg', box), before = holder.innerHTML;
+  holder.innerHTML = `<span class="uping">${t('กำลังอัปโหลดรูป…')}</span>`;
   try {
     let img, full, th;
     try {
       img = await decodeImg(file);
-      full = toJpeg(img, 1800, .82);
+      full = toJpeg(img, 1600, .8);
       let q = .7;
       do { th = toJpeg(img, 240, q); q -= .1; } while (th.length > 20000 && q > .2);
     } catch (x) { throw new Error(t('อ่านรูปนี้ไม่ได้ ลองเลือกรูปอื่น หรือแคปหน้าจอแล้วแนบแทน')); }
@@ -1045,7 +1070,7 @@ async function handlePhoto(input) {
     box.dataset.v = r.id; $('.phimg', box).innerHTML = `<img data-thumb="${esc(r.id)}" data-act="viewp" data-id="${esc(r.id)}" alt="">`; fillThumbs(box);
     if (!$('[data-act="phclear"]', box)) box.insertAdjacentHTML('beforeend', `<button type="button" class="ghost" data-act="phclear">${t('เอารูปออก')}</button>`);
     toast(t('อัปโหลดรูปแล้ว'));
-  } catch (e) { toast(t('อัปโหลดรูปไม่สำเร็จ') + (e && e.message ? ': ' + e.message : '')); }
+  } catch (e) { holder.innerHTML = before; fillThumbs(box); toast(t('อัปโหลดรูปไม่สำเร็จ') + (e && e.message ? ': ' + e.message : '')); }
   box.classList.remove('busy'); input.value = '';
 }
 async function viewPhoto(id) {
@@ -1094,7 +1119,8 @@ const shared = x => Object.keys((x || trip()).access || {}).length > 1;
 const of = k => T.recs.filter(r => r.kind === k);
 const rec = id => T.recs.find(r => r.id === id);
 const byTime = (a, b) => (a.time || '99').localeCompare(b.time || '99');
-function upsert(r) { const i = T.recs.findIndex(x => x.id === r.id); i >= 0 ? T.recs[i] = r : T.recs.push(r); }
+function upsert(r) { T.mut++; upsert0(r); }
+function upsert0(r) { const i = T.recs.findIndex(x => x.id === r.id); i >= 0 ? T.recs[i] = r : T.recs.push(r); }
 function tripDays(x) {
   const out = []; if (!x || !x.start || !x.end) return out;
   const d = new Date(x.start + 'T00:00'), e = new Date(x.end + 'T00:00');
@@ -1180,7 +1206,10 @@ function cacheTrip() {
 }
 // แสดงสถานะกำลังบันทึก
 let SYNC = 0;
-function syncUI(d) { SYNC = Math.max(0, SYNC + d); const e = $('#sync'); e.textContent = t('กำลังบันทึก…'); e.hidden = !SYNC; }
+function syncUI(d) {
+  SYNC = Math.max(0, SYNC + d); const e = $('#sync'); e.textContent = t('กำลังบันทึก…'); e.hidden = !SYNC;
+  if (!SYNC && T.id) { clearTimeout(T.rt); T.rt = setTimeout(() => { T.needReload = false; reloadTrip(); }, 300); }
+}
 window.addEventListener('beforeunload', e => { if (SYNC) { e.preventDefault(); e.returnValue = ''; } });
 
 async function loadTrips() {
@@ -1193,12 +1222,25 @@ async function loadTrips() {
       <button class="btn" data-act="retry">${t('ลองใหม่')}</button></div>`;
   }
 }
-function applyTrip(r) { T.recs = r.recs; T.thumbs = r.thumbs || {}; T.rates = r.rates || {}; T.loadedAt = Date.now(); }
+// ทุกครั้งที่แก้ข้อมูลในเครื่อง ตัวนับจะเพิ่ม คำตอบจาก Google ที่ขอไว้ก่อนการแก้ล่าสุดจะไม่ถูกเอามาทับ
+T.mut = 0;
+function applyTrip(r, sameTrip) {
+  T.recs = r.recs; T.rates = r.rates || {}; T.loadedAt = Date.now();
+  T.thumbs = Object.assign({}, sameTrip ? T.thumbs : {}, r.thumbs || {}); // รวมรูป ไม่ทิ้งรูปที่เพิ่งอัปโหลด
+}
+function freshEnough(id, seq) { return T.id === id && T.mut === seq && !SYNC; }
 // โหลดทริปใหม่เงียบๆ เพื่อเห็นรายการที่เพื่อนเพิ่งบันทึก
 async function reloadTrip() {
   if (!T.id || $('#sheetBg').classList.contains('show')) return;
   const id = T.id;
-  try { const r = await run('getTrip', id); if (T.id === id && !$('#sheetBg').classList.contains('show') && !SYNC) { applyTrip(r); cacheTrip(); renderTrips(); } } catch (e) {}
+  const seq = T.mut;
+  try {
+    const r = await run('getTrip', id);
+    if (T.id !== id) return;
+    if (!freshEnough(id, seq)) { Object.assign(T.thumbs, r.thumbs || {}); return; }
+    if ($('#sheetBg').classList.contains('show')) { Object.assign(T.thumbs, r.thumbs || {}); return; }
+    applyTrip(r, true); T.thumbCache[id] = T.thumbs; cacheTrip(); renderTrips();
+  } catch (e) {}
 }
 document.addEventListener('visibilitychange', () => { if (!document.hidden && T.id && Date.now() - (T.loadedAt || 0) > 20000) reloadTrip(); });
 function goTrip(id) { openTrip(id); }
@@ -1207,13 +1249,18 @@ async function openTrip(id) {
   T.id = id; T.recs = []; T.sub = 'overview'; T.day = 0; T.who = ''; T.catAll = false;
   const firstView = () => { const i = tripDays(trip()).indexOf(ymd(new Date())); if (i >= 0) { T.day = i; T.sub = 'plan'; } };
   const cached = (cacheGet().trips || {})[id];
-  if (cached) { applyTrip({ recs: cached.recs, rates: cached.rates, thumbs: T.thumbCache[id] || {} }); T.loadedAt = 0; firstView(); renderTrips(); window.scrollTo(0, 0); }
+  if (cached) { applyTrip({ recs: cached.recs, rates: cached.rates, thumbs: T.thumbCache[id] || {} }, false); T.loadedAt = 0; firstView(); renderTrips(); window.scrollTo(0, 0); }
   else { $('#trips').innerHTML = `<div class="empty">${t('กำลังเปิดทริป…')}</div>`; renderFab(); }
+  const seq = T.mut;
   try {
     const r = await run('getTrip', id);
     if (T.id !== id) return;
-    if (cached && ($('#sheetBg').classList.contains('show') || SYNC)) { T.thumbs = r.thumbs || {}; T.rates = r.rates || {}; T.thumbCache[id] = T.thumbs; fillThumbs(); return; }
-    applyTrip(r); T.thumbCache[id] = T.thumbs; cacheTrip();
+    if (cached && (!freshEnough(id, seq) || $('#sheetBg').classList.contains('show'))) {
+      Object.assign(T.thumbs, r.thumbs || {}); T.thumbCache[id] = T.thumbs; fillThumbs();
+      if (T.mut !== seq || SYNC) T.needReload = true; // ขอใหม่หลังบันทึกเสร็จ
+      return;
+    }
+    applyTrip(r, !!cached); T.thumbCache[id] = T.thumbs; cacheTrip();
     if (!cached) { firstView(); window.scrollTo(0, 0); }
     renderTrips();
   } catch (e) { if (!cached) { toast(e.message); goList(); } }
@@ -1225,7 +1272,7 @@ function saver(kind) {
   return async o => {
     o.kind = kind; o.tripId = T.id;
     if (o.id && PEND[o.id]) { o.id = await PEND[o.id]; if (!o.id) throw new Error(t('บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง')); }
-    const tripId = T.id, prev = o.id ? rec(o.id) : null;
+    const tripId = T.id, prev = o.id ? rec(o.id) : null; T.mut++;
     const tmp = o.id ? '' : 'tmp' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
     const local = { ...o, id: o.id || tmp, by: prev ? prev.by : ME.username, _pend: true };
     upsert(local); renderTrips(); toast(t('บันทึกแล้ว')); syncUI(1);
@@ -1252,7 +1299,7 @@ function saver(kind) {
 function deleter(id) {
   return async () => {
     if (!confirm(t('ลบรายการนี้?'))) return false;
-    const tripId = T.id, prev = rec(id);
+    const tripId = T.id, prev = rec(id); T.mut++;
     T.recs = T.recs.filter(r => r.id !== id); renderTrips(); toast(t('ลบแล้ว')); syncUI(1);
     realId(id).then(rid => rid ? run('deleteRec', rid) : null).then(() => { if (T.id === tripId) cacheTrip(); }, x => {
       if (T.id === tripId && prev) { upsert(prev); renderTrips(); }

@@ -314,9 +314,11 @@ function listTrips(u) {
     .sort((a, b) => String(b.start || '').localeCompare(String(a.start || '')));
 }
 
+// ฟิลด์ที่เก็บ id รูป (ใช้กรองว่ารูปไหน "มองเห็นได้" ตามรายการที่กรองสิทธิ์แล้ว)
+const PHOTO_FIELDS = ['photo', 'pass'];
 function getTrip(u, tripId) {
   const all = tripRows_(), t = needTrip_(u, all, tripId);
-  const recs = [t], rates = {};
+  const recs = [t], rates = {}, visiblePhotos = {};
   all.forEach(r => {
     if (r.tripId !== tripId || r.kind === 'trip') return;
     const o = r.o, by = byOf_(o, t);
@@ -329,14 +331,16 @@ function getTrip(u, tripId) {
       }
     }
     if (privateRec_(o) && by !== u.username) return;
+    PHOTO_FIELDS.forEach(f => { if (o[f]) visiblePhotos[o[f]] = 1; });
     recs.push(o);
   });
   const avg = {};
   Object.keys(rates).forEach(k => avg[k] = {
     cash: rates[k].cash[0] ? rates[k].cash[1] / rates[k].cash[0] : 0,
     card: rates[k].card[0] ? rates[k].card[1] / rates[k].card[0] : 0 });
+  // รูปย่อคืนให้เฉพาะรูปที่ผูกกับรายการที่คนนี้มีสิทธิ์เห็น (กันรูปของรายการส่วนตัวคนอื่นหลุด)
   const thumbs = {};
-  rows_(photos_(), 3).forEach(r => { if (r[1] === tripId) thumbs[r[0]] = r[2]; });
+  rows_(photos_(), 3).forEach(r => { if (r[1] === tripId && visiblePhotos[r[0]]) thumbs[r[0]] = r[2]; });
   return { recs: recs, thumbs: thumbs, rates: avg };
 }
 
@@ -534,7 +538,13 @@ function getPhoto(u, id) {
   const ph = photos_(), r = findRow_(ph, id);
   if (r < 0) throw new Error('ไม่พบรูป');
   const row = ph.getRange(r, 1, 1, 5).getValues()[0];
-  if (row[1]) needTrip_(u, tripRows_(), row[1]);
+  const tripId = row[1];
+  if (tripId) {
+    const all = tripRows_(), t = needTrip_(u, all, tripId);
+    // รูปนี้อาจผูกกับรายการ "ส่วนตัว" (เช่นค่าใช้จ่าย mode:self) ของคนอื่น ถ้าใช่ ต้องเป็นคนเดียวกับที่บันทึกเท่านั้นถึงจะดูได้
+    const owner = all.find(x => x.tripId === tripId && x.kind !== 'trip' && PHOTO_FIELDS.some(f => x.o[f] === id));
+    if (owner && privateRec_(owner.o) && byOf_(owner.o, t) !== u.username) throw new Error('ไม่มีสิทธิ์ดูรูปนี้');
+  }
   else if (ownerOf_(row[4]) !== u.username) throw new Error('ไม่มีสิทธิ์ดูรูปนี้');
   const blob = DriveApp.getFileById(row[3]).getBlob();
   return 'data:' + blob.getContentType() + ';base64,' + Utilities.base64Encode(blob.getBytes());

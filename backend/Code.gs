@@ -17,20 +17,20 @@ const HEAD = {
   'ทริป':        ['ID','TripID','ชนิด','ข้อมูล (JSON)','อัปเดต'],
   'รูป':         ['ID','TripID','รูปย่อ','DriveFileID','ผู้ใช้'],
   'ตั้งค่า':      ['Key','ข้อมูล (JSON)'],
-  'บัญชีผู้ใช้':  ['ชื่อผู้ใช้','Hash','Salt','สร้างเมื่อ']
+  'บัญชีผู้ใช้':  ['ชื่อผู้ใช้','Hash','Salt','สร้างเมื่อ','Email']
 };
 
 // คำสั่งที่เรียกได้โดยไม่ต้องล็อกอิน
-const PUBLIC = { ping: () => 'ok', login, register };
+const PUBLIC = { ping: () => 'ok', login, register, requestReset, resetPassword };
 // คำสั่งที่ต้องล็อกอิน (ได้รับผู้ใช้ "u" เป็นตัวแรกเสมอ)
 const API = {
-  me, logout, changePassword,
+  me, logout, changePassword, setEmail,
   addEntry, deleteEntry, getMonth, listProps, saveProp, getSettings, saveSettings,
   listTrips, getTrip, saveRec, deleteRec, joinTrip, leaveTrip, removeFromTrip, removeMember, newTripCode,
   savePhoto, getPhoto, resolvePlace, getRate, duplicateTrip
 };
 // คำสั่งที่เขียนข้อมูล ให้ทำทีละคำสั่ง กันข้อมูลชนกันตอนหลายคนบันทึกพร้อมกัน
-const WRITES = ['register', 'changePassword', 'addEntry', 'deleteEntry', 'saveProp', 'saveSettings',
+const WRITES = ['register', 'changePassword', 'setEmail', 'resetPassword', 'addEntry', 'deleteEntry', 'saveProp', 'saveSettings',
   'saveRec', 'deleteRec', 'joinTrip', 'leaveTrip', 'removeFromTrip', 'removeMember', 'newTripCode', 'savePhoto', 'duplicateTrip'];
 
 function doGet() {
@@ -117,10 +117,21 @@ function hashPw_(pw, salt) { // รหัสผ่านไม่ถูกเก
   return h;
 }
 function normUser_(s) { return String(s || '').trim().toLowerCase(); }
+function normEmail_(s) { return String(s || '').trim().toLowerCase(); }
+const EMAIL_RX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 function findUser_(name) {
-  const r = rows_(sheet_(S_USER), 3);
+  const r = rows_(sheet_(S_USER), 5);
   const i = r.findIndex(x => x[0] === name);
-  return i < 0 ? null : { row: i + 2, username: r[i][0], hash: r[i][1], salt: r[i][2] };
+  return i < 0 ? null : { row: i + 2, username: r[i][0], hash: r[i][1], salt: r[i][2], email: String(r[i][4] || '') };
+}
+function findByEmail_(email) {
+  const r = rows_(sheet_(S_USER), 5);
+  const i = r.findIndex(x => normEmail_(x[4]) === email);
+  return i < 0 ? null : { row: i + 2, username: r[i][0], hash: r[i][1], salt: r[i][2], email: String(r[i][4] || '') };
+}
+function maskEmail_(email) { // ปิดบังอีเมลบางส่วนตอนแจ้งว่าส่งรหัสไปที่ไหน เช่น to***@gmail.com
+  const m = String(email).match(/^(.{1,2}).*(@.+)$/);
+  return m ? m[1] + '***' + m[2] : email;
 }
 function userSalt_(name) {
   const c = CacheService.getScriptCache(), k = 'U:' + sha_(name);
@@ -144,18 +155,21 @@ function session_(tok) {
   return { username: s.u, key: key };
 }
 
-function register(username, password) {
+function register(username, password, email) {
   if (!ALLOW_SIGNUP) throw new Error('ปิดรับสมัครบัญชีใหม่อยู่ ติดต่อเจ้าของแอป');
   const name = normUser_(username);
   if (!/^[a-z0-9฀-๿_.-]{3,20}$/.test(name)) throw new Error('ชื่อผู้ใช้ยาว 3-20 ตัว ใช้ได้เฉพาะตัวอักษร ตัวเลข _ . -');
   if (String(password || '').length < 6) throw new Error('รหัสผ่านอย่างน้อย 6 ตัว');
+  const em = normEmail_(email);
+  if (!EMAIL_RX.test(em)) throw new Error('ใส่อีเมลให้ถูกต้อง ใช้กู้คืนรหัสผ่านตอนลืม');
   const c = CacheService.getScriptCache(), reg = Number(c.get('REG') || 0);
   if (reg >= 10) throw new Error('มีการสมัครบ่อยเกินไป ลองใหม่ในอีก 10 นาที');
   const sh = sheet_(S_USER);
   if (findUser_(name)) throw new Error('ชื่อผู้ใช้นี้มีคนใช้แล้ว ลองชื่ออื่น');
+  if (findByEmail_(em)) throw new Error('อีเมลนี้ถูกใช้กับบัญชีอื่นแล้ว');
   if (sh.getLastRow() - 1 >= MAX_USERS) throw new Error('จำนวนบัญชีเต็มแล้ว');
   const salt = Utilities.getUuid();
-  sh.appendRow([name, hashPw_(password, salt), salt, new Date()]);
+  sh.appendRow([name, hashPw_(password, salt), salt, new Date(), em]);
   c.put('REG', String(reg + 1), 600);
   c.remove('U:' + sha_(name));
   if (!legacy_()) SP().setProperty('LEGACY_OWNER', name);
@@ -178,7 +192,7 @@ function login(username, password) {
 
 function logout(u) { SP().deleteProperty(u.key); return true; }
 
-function me(u) { return { username: u.username }; }
+function me(u) { const x = findUser_(u.username); return { username: u.username, email: x ? x.email : '' }; }
 
 function changePassword(u, oldPw, newPw) {
   const x = findUser_(u.username);
@@ -188,6 +202,57 @@ function changePassword(u, oldPw, newPw) {
   sheet_(S_USER).getRange(x.row, 2, 1, 2).setValues([[hashPw_(newPw, salt), salt]]);
   CacheService.getScriptCache().remove('U:' + sha_(u.username));
   return { token: newSession_(u.username, salt) };
+}
+
+// ตั้ง/แก้อีเมลกู้คืนรหัสผ่าน (คนที่สมัครก่อนมีฟีเจอร์นี้ยังไม่มีอีเมล เข้ามาตั้งเองได้ตอนล็อกอินอยู่)
+function setEmail(u, email) {
+  const em = normEmail_(email);
+  if (!EMAIL_RX.test(em)) throw new Error('รูปแบบอีเมลไม่ถูกต้อง');
+  const other = findByEmail_(em);
+  if (other && other.username !== u.username) throw new Error('อีเมลนี้ถูกใช้กับบัญชีอื่นแล้ว');
+  const x = findUser_(u.username);
+  sheet_(S_USER).getRange(x.row, 5).setValue(em);
+  return { email: em };
+}
+
+// ---------- ลืมรหัสผ่าน: ส่งรหัสยืนยัน 6 หลักไปทางอีเมลที่ผูกไว้ ----------
+function findAccount_(usernameOrEmail) {
+  const raw = String(usernameOrEmail || '').trim();
+  return raw.indexOf('@') >= 0 ? findByEmail_(normEmail_(raw)) : findUser_(normUser_(raw));
+}
+function requestReset(id) {
+  const raw = String(id || '').trim();
+  if (!raw) throw new Error('ใส่ชื่อผู้ใช้หรืออีเมล');
+  const c = CacheService.getScriptCache(), rk = 'RQ:' + sha_(raw.toLowerCase()), reqs = Number(c.get(rk) || 0);
+  if (reqs >= 5) throw new Error('ขอรหัสบ่อยเกินไป ลองใหม่ในอีก 10 นาที');
+  c.put(rk, String(reqs + 1), 600);
+  const isEmail = raw.indexOf('@') >= 0;
+  const u = findAccount_(raw);
+  if (!u) throw new Error(isEmail ? 'ไม่พบอีเมลนี้ในระบบ' : 'ไม่พบชื่อผู้ใช้นี้');
+  if (!u.email) throw new Error('บัญชีนี้ยังไม่ได้ตั้งอีเมลกู้คืนรหัสผ่าน ติดต่อเจ้าของแอป');
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+  c.put('RST:' + sha_(u.username), JSON.stringify({ code: code, tries: 0 }), 900); // ใช้ได้ 15 นาที
+  MailApp.sendEmail(u.email, 'รหัสตั้งรหัสผ่านใหม่ - Split&Go',
+    'รหัสยืนยันของคุณคือ ' + code + '\nใช้ตั้งรหัสผ่านใหม่ได้ภายใน 15 นาที\n\nถ้าไม่ได้ขอเอง ไม่ต้องทำอะไร รหัสผ่านเดิมยังใช้ได้ตามปกติ');
+  return { masked: maskEmail_(u.email) };
+}
+function resetPassword(id, code, newPw) {
+  const u = findAccount_(id);
+  if (!u) throw new Error('ไม่พบบัญชีนี้');
+  const c = CacheService.getScriptCache(), key = 'RST:' + sha_(u.username), raw = c.get(key);
+  if (!raw) throw new Error('รหัสยืนยันหมดอายุ ขอรหัสใหม่อีกครั้ง');
+  const st = JSON.parse(raw);
+  if (st.tries >= 6) { c.remove(key); throw new Error('ใส่รหัสผิดหลายครั้ง ขอรหัสใหม่อีกครั้ง'); }
+  if (String(code || '').trim() !== st.code) {
+    st.tries++; c.put(key, JSON.stringify(st), 900);
+    throw new Error('รหัสยืนยันไม่ถูกต้อง');
+  }
+  if (String(newPw || '').length < 6) throw new Error('รหัสผ่านใหม่อย่างน้อย 6 ตัว');
+  const salt = Utilities.getUuid();
+  sheet_(S_USER).getRange(u.row, 2, 1, 2).setValues([[hashPw_(newPw, salt), salt]]);
+  c.remove(key);
+  CacheService.getScriptCache().remove('U:' + sha_(u.username));
+  return { token: newSession_(u.username, salt), username: u.username };
 }
 
 // ---------- บัญชีรายรับรายจ่าย (แต่ละคนเห็นของตัวเอง) ----------

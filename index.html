@@ -353,15 +353,18 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none}
     <div class="seg" id="gMode"><button type="button" data-m="login" class="on" data-t="เข้าสู่ระบบ"></button><button type="button" data-m="signup" data-t="สมัครใหม่"></button></div>
     <div class="fld" id="gUrlWrap"><label class="fl" for="gUrl" data-t="ลิงก์ Apps Script (ลงท้ายด้วย /exec)"></label>
       <input id="gUrl" type="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://script.google.com/macros/s/…/exec"></div>
-    <div class="fld"><label class="fl" for="gUser" data-t="ชื่อผู้ใช้"></label>
+    <div class="fld" id="gUserWrap"><label class="fl" for="gUser" id="gUserLbl"></label>
       <input id="gUser" autocomplete="username" autocapitalize="off" spellcheck="false"></div>
-    <div class="fld"><label class="fl" for="gPass" data-t="รหัสผ่าน"></label>
+    <div class="fld" id="gEmailWrap" hidden><label class="fl" for="gEmail" data-t="อีเมล (ใช้กู้คืนรหัสผ่าน)"></label>
+      <input id="gEmail" type="email" autocomplete="email" autocapitalize="off" spellcheck="false"></div>
+    <div class="fld" id="gPassWrap"><label class="fl" for="gPass" id="gPassLbl"></label>
       <input id="gPass" type="password" autocomplete="current-password"></div>
-    <div class="fld" id="gPass2Wrap" hidden><label class="fl" for="gPass2" data-t="ใส่รหัสผ่านอีกครั้ง"></label>
+    <div class="fld" id="gPass2Wrap" hidden><label class="fl" for="gPass2" id="gPass2Lbl"></label>
       <input id="gPass2" type="password" autocomplete="new-password"></div>
     <div class="tiny" id="gHint" hidden style="margin:-4px 0 12px" data-t="ชื่อผู้ใช้ 3–20 ตัว ภาษาไทยหรืออังกฤษก็ได้ รหัสผ่านอย่างน้อย 6 ตัว"></div>
     <div class="gmsg" id="gMsg"></div>
     <button class="btn" id="gGo"></button>
+    <button class="link" id="gForgot" type="button" data-t="ลืมรหัสผ่าน?"></button>
     <button class="link" id="gServer" type="button" data-t="เปลี่ยนลิงก์ Apps Script"></button>
   </div>
 </div>
@@ -399,6 +402,21 @@ const EN = {
   'ลิงก์ต้องขึ้นต้นด้วย https://script.google.com และลงท้ายด้วย /exec': 'The link must start with https://script.google.com and end with /exec',
   'ใส่ชื่อผู้ใช้และรหัสผ่าน': 'Enter your username and password', 'รหัสผ่านสองช่องไม่ตรงกัน': 'The two passwords don\'t match',
   'กรุณาเข้าสู่ระบบอีกครั้ง': 'Please log in again',
+  // ลืมรหัสผ่าน / อีเมลกู้คืนบัญชี
+  'ลืมรหัสผ่าน?': 'Forgot password?', 'กลับไปเข้าสู่ระบบ': 'Back to login', 'ชื่อผู้ใช้หรืออีเมล': 'Username or email',
+  'รหัสยืนยัน (จากอีเมล)': 'Verification code (from email)', 'ส่งรหัสยืนยัน': 'Send code', 'ตั้งรหัสผ่านใหม่': 'Reset password',
+  'อีเมล (ใช้กู้คืนรหัสผ่าน)': 'Email (for account recovery)', 'ใส่อีเมลสำหรับกู้คืนรหัสผ่าน': 'Enter an email for account recovery',
+  'ใส่ชื่อผู้ใช้หรืออีเมล': 'Enter your username or email', 'ใส่รหัสยืนยันและรหัสผ่านใหม่': 'Enter the verification code and new password',
+  'ส่งรหัสไปที่ {x} แล้ว': 'Code sent to {x}',
+  'ขอรหัสบ่อยเกินไป ลองใหม่ในอีก 10 นาที': 'Too many requests. Try again in 10 minutes.',
+  'ไม่พบอีเมลนี้ในระบบ': 'No account with this email', 'ไม่พบชื่อผู้ใช้นี้': 'No account with this username',
+  'บัญชีนี้ยังไม่ได้ตั้งอีเมลกู้คืนรหัสผ่าน ติดต่อเจ้าของแอป': 'This account has no recovery email set. Contact the app owner.',
+  'ไม่พบบัญชีนี้': 'Account not found', 'รหัสยืนยันหมดอายุ ขอรหัสใหม่อีกครั้ง': 'The code expired. Request a new one.',
+  'ใส่รหัสผิดหลายครั้ง ขอรหัสใหม่อีกครั้ง': 'Too many wrong attempts. Request a new code.', 'รหัสยืนยันไม่ถูกต้อง': 'Incorrect verification code',
+  'ใส่อีเมลให้ถูกต้อง ใช้กู้คืนรหัสผ่านตอนลืม': 'Enter a valid email, used to recover your password',
+  'อีเมลนี้ถูกใช้กับบัญชีอื่นแล้ว': 'This email is already used by another account', 'รูปแบบอีเมลไม่ถูกต้อง': 'Invalid email format',
+  'อีเมลกู้คืนรหัสผ่าน': 'Recovery email', 'ใช้ตอนลืมรหัสผ่าน เก็บเฉพาะบัญชีนี้': 'Used if you forget your password. Only visible to you.',
+  'บันทึกอีเมล': 'Save email', 'ยังไม่ได้ตั้งอีเมล': 'No email set', 'ใส่อีเมลให้ถูกต้อง': 'Enter a valid email', 'บันทึกอีเมลแล้ว': 'Email saved',
   'เชื่อมต่อไม่ได้ เช็คอินเทอร์เน็ต หรือตั้งค่า Apps Script ให้ "ทุกคน" เข้าถึงได้': 'Can\'t connect. Check the internet, or set the Apps Script access to "Anyone".',
   'Apps Script ตอบกลับผิดรูปแบบ เช็คว่าลิงก์ถูกและ Deploy เวอร์ชันล่าสุดแล้ว': 'Apps Script replied in the wrong format. Check the link and deploy the latest version.',
   'เกิดข้อผิดพลาด': 'Something went wrong',
@@ -722,7 +740,7 @@ const QAPI = QP.get('api') || '';
 let QJOIN = (QP.get('join') || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 const API = { url: QAPI || LS.get('ts_url') || DEFAULT_API, tok: LS.get('ts_tok') };
 ['ts_key', 'ts_pass'].forEach(k => LS.set(k, '')); // เวอร์ชันเก่าเคยเก็บรหัสไว้ในเครื่อง ลบทิ้ง
-const ME = { username: LS.get('ts_user') };
+const ME = { username: LS.get('ts_user'), email: '' };
 async function call(url, body) {
   let res;
   try {
@@ -743,20 +761,44 @@ const inviteLink = code => { // ถ้าฝังลิงก์ไว้ใน
   const q = [API.url && API.url !== DEFAULT_API ? 'api=' + enc(API.url) : '', code ? 'join=' + code : ''].filter(Boolean).join('&');
   return location.origin + location.pathname + (q ? '?' + q : '');
 };
-let GMODE = 'login';
+let GMODE = 'login', GSTEP = 1, GFID = '';
 function setGateMode(m) {
-  GMODE = m;
+  GMODE = m; GSTEP = 1;
+  $('#gMode').hidden = m === 'forgot';
   $$('#gMode button').forEach(b => b.classList.toggle('on', b.dataset.m === m));
-  $('#gPass2Wrap').hidden = $('#gHint').hidden = m !== 'signup';
-  $('#gGo').textContent = t(m === 'signup' ? 'สมัครและเข้าใช้งาน' : 'เข้าสู่ระบบ');
+  $('#gEmailWrap').hidden = m !== 'signup';
+  $('#gHint').hidden = m !== 'signup';
+  $('#gForgot').hidden = m === 'signup';
+  $('#gForgot').textContent = t(m === 'forgot' ? 'กลับไปเข้าสู่ระบบ' : 'ลืมรหัสผ่าน?');
+  $('#gUser').disabled = false;
+  $('#gUserLbl').textContent = t(m === 'forgot' ? 'ชื่อผู้ใช้หรืออีเมล' : 'ชื่อผู้ใช้');
+  $('#gPassWrap').hidden = false;
+  $('#gPass').type = 'password'; $('#gPass').removeAttribute('inputmode');
+  $('#gPassLbl').textContent = t('รหัสผ่าน');
   $('#gPass').autocomplete = m === 'signup' ? 'new-password' : 'current-password';
+  $('#gPass2Wrap').hidden = m !== 'signup';
+  $('#gPass2Lbl').textContent = t('ใส่รหัสผ่านอีกครั้ง');
+  $('#gGo').textContent = t(m === 'signup' ? 'สมัครและเข้าใช้งาน' : m === 'forgot' ? 'ส่งรหัสยืนยัน' : 'เข้าสู่ระบบ');
+  if (m === 'forgot') applyForgotStep();
+}
+// โหมด "ลืมรหัสผ่าน" มี 2 ขั้น: 1) กรอกชื่อผู้ใช้/อีเมล 2) กรอกรหัสยืนยันที่ได้ทางอีเมล + รหัสผ่านใหม่
+// ใช้ช่อง gPass/gPass2 เดิมซ้ำ (แค่เปลี่ยนป้ายกำกับ) แทนที่จะเพิ่มฟอร์มใหม่
+function applyForgotStep() {
+  $('#gUser').disabled = GSTEP === 2;
+  $('#gPassWrap').hidden = GSTEP === 1;
+  $('#gPass').value = ''; $('#gPass2').value = '';
+  $('#gPass').type = 'text'; $('#gPass').setAttribute('inputmode', 'numeric'); $('#gPass').autocomplete = 'one-time-code';
+  $('#gPassLbl').textContent = t('รหัสยืนยัน (จากอีเมล)');
+  $('#gPass2Wrap').hidden = GSTEP === 1;
+  $('#gPass2Lbl').textContent = t('รหัสผ่านใหม่ (อย่างน้อย 6 ตัว)');
+  $('#gGo').textContent = t(GSTEP === 1 ? 'ส่งรหัสยืนยัน' : 'ตั้งรหัสผ่านใหม่');
 }
 const gateSub = () => { $('#gSub').textContent = t(QJOIN ? 'เพื่อนชวนคุณเข้าทริป สมัครบัญชีหรือเข้าสู่ระบบก่อน แล้วแอปจะพาเข้าทริปให้' : 'วางแผนทริปกับเพื่อน และดูว่าใครใช้เงินไปเท่าไร'); };
 function showGate(msg, mode) {
   closeForm(); $('#fab').hidden = true;
   $('#gUrlWrap').hidden = !!API.url; $('#gServer').hidden = !API.url;
   $('#gUrl').value = API.url;
-  $('#gUser').value = ME.username || ''; $('#gPass').value = ''; $('#gPass2').value = '';
+  $('#gUser').value = ME.username || ''; $('#gPass').value = ''; $('#gPass2').value = ''; $('#gEmail').value = '';
   setGateMode(mode || (QJOIN && !ME.username ? 'signup' : 'login'));
   gateSub();
   $('#gMsg').textContent = msg || '';
@@ -764,22 +806,55 @@ function showGate(msg, mode) {
 }
 $('#gMode').onclick = e => { const b = e.target.closest('button'); if (b) { setGateMode(b.dataset.m); $('#gMsg').textContent = ''; } };
 $('#gServer').onclick = () => { $('#gUrlWrap').hidden = false; $('#gServer').hidden = true; $('#gUrl').focus(); };
+$('#gForgot').onclick = () => { setGateMode(GMODE === 'forgot' ? 'login' : 'forgot'); $('#gMsg').textContent = ''; };
 $('#gGo').onclick = async () => {
-  const url = $('#gUrl').value.trim(), user = $('#gUser').value.trim(), pass = $('#gPass').value;
+  const url = $('#gUrl').value.trim();
   const msg = x => { $('#gMsg').textContent = x; };
   if (!/^https:\/\/script\.google\.com\/.+\/exec/.test(url)) return msg(t('ลิงก์ต้องขึ้นต้นด้วย https://script.google.com และลงท้ายด้วย /exec'));
+  const b = $('#gGo'), label = b.textContent;
+  const busy = on => { b.disabled = on; b.textContent = on ? t('รอสักครู่…') : label; };
+
+  if (GMODE === 'forgot') {
+    if (GSTEP === 1) {
+      const id = $('#gUser').value.trim();
+      if (!id) return msg(t('ใส่ชื่อผู้ใช้หรืออีเมล'));
+      busy(true); msg('');
+      try {
+        const r = await call(url, { fn: 'requestReset', args: [id] });
+        API.url = url; LS.set('ts_url', url);
+        GFID = id; GSTEP = 2; applyForgotStep();
+        toast(tf('ส่งรหัสไปที่ {x} แล้ว', { x: r.masked }));
+      } catch (e) { msg(e.message); }
+      busy(false);
+    } else {
+      const code = $('#gPass').value.trim(), newPw = $('#gPass2').value;
+      if (!code || !newPw) return msg(t('ใส่รหัสยืนยันและรหัสผ่านใหม่'));
+      busy(true); msg('');
+      try {
+        const r = await call(url, { fn: 'resetPassword', args: [GFID, code, newPw] });
+        resetState(); setSession(r.token, r.username);
+        $('#gate').hidden = true; start();
+      } catch (e) { msg(e.message); }
+      busy(false);
+    }
+    return;
+  }
+
+  const user = $('#gUser').value.trim(), pass = $('#gPass').value;
   if (!user || !pass) return msg(t('ใส่ชื่อผู้ใช้และรหัสผ่าน'));
   if (GMODE === 'signup' && pass !== $('#gPass2').value) return msg(t('รหัสผ่านสองช่องไม่ตรงกัน'));
-  const b = $('#gGo'), label = b.textContent; b.disabled = true; b.textContent = t('รอสักครู่…'); msg('');
+  if (GMODE === 'signup' && !$('#gEmail').value.trim()) return msg(t('ใส่อีเมลสำหรับกู้คืนรหัสผ่าน'));
+  busy(true); msg('');
   try {
-    const r = await call(url, { fn: GMODE === 'signup' ? 'register' : 'login', args: [user, pass] });
+    const args = GMODE === 'signup' ? [user, pass, $('#gEmail').value.trim()] : [user, pass];
+    const r = await call(url, { fn: GMODE === 'signup' ? 'register' : 'login', args });
     API.url = url; LS.set('ts_url', url);
     resetState(); setSession(r.token, r.username);
     $('#gate').hidden = true; start();
   } catch (e) { msg(e.message); }
-  b.disabled = false; b.textContent = label;
+  busy(false);
 };
-['gUser', 'gPass', 'gPass2'].forEach(id => $('#' + id).addEventListener('keydown', e => { if (e.key === 'Enter') $('#gGo').click(); }));
+['gUser', 'gEmail', 'gPass', 'gPass2'].forEach(id => $('#' + id).addEventListener('keydown', e => { if (e.key === 'Enter') $('#gGo').click(); }));
 
 /* ---------- ย้อนกลับ: ปัดขอบซ้าย / ปุ่มย้อนกลับ ปิดสิ่งที่เปิดอยู่ชั้นบนสุด ---------- */
 const NAV = { depth: 0, skip: 0, pend: 0 };
@@ -822,6 +897,9 @@ function openAccount() {
   <div class="block"><div class="lbl">${t('เข้าสู่ระบบเป็น')}</div><div class="uname">${esc(ME.username)}</div>
     <div class="tiny">${t('ทริปของคุณ ค่าใช้จ่ายส่วนตัว และกระเป๋าเงินในทริป เห็นเฉพาะบัญชีนี้')}</div></div>
   <div class="block">${head('globe', t('ภาษา'), '', `<div class="lang">${langSwitch()}</div>`)}</div>
+  <div class="block">${head('key', t('อีเมลกู้คืนรหัสผ่าน'), t('ใช้ตอนลืมรหัสผ่าน เก็บเฉพาะบัญชีนี้'))}
+    <div class="fld"><label class="fl" for="acEmail">${t('อีเมล')}</label><input type="email" id="acEmail" value="${esc(ME.email)}" autocomplete="email" placeholder="${esc(t('ยังไม่ได้ตั้งอีเมล'))}"></div>
+    <button class="ghost" data-act="setEmail">${t('บันทึกอีเมล')}</button></div>
   <div class="block">${head('users', t('ชวนเพื่อนมาใช้แอป'), t('เพื่อนสมัครบัญชีของตัวเอง ข้อมูลแยกกันคนละบัญชี'))}
     <button class="ghost" data-act="copyApp">${ico('copy', 16)}${t('คัดลอกลิงก์แอป')}</button>
     <div class="tiny">${t('ถ้าจะชวนเข้าทริป ให้กดปุ่มแชร์ในหน้าทริปแทน')}</div></div>
@@ -1039,6 +1117,14 @@ $('#sheet').addEventListener('click', async e => {
     if (!o || !n) return toast(t('ใส่รหัสผ่านเดิมและรหัสผ่านใหม่'));
     b.disabled = true;
     try { const r = await run('changePassword', o, n); setSession(r.token, ME.username); $('#pwOld').value = $('#pwNew').value = ''; toast(t('เปลี่ยนรหัสผ่านแล้ว')); }
+    catch (x) { toast(x.message); }
+    b.disabled = false;
+  }
+  else if (act === 'setEmail') {
+    const email = $('#acEmail').value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return toast(t('ใส่อีเมลให้ถูกต้อง'));
+    b.disabled = true;
+    try { const r = await run('setEmail', email); ME.email = r.email; toast(t('บันทึกอีเมลแล้ว')); }
     catch (x) { toast(x.message); }
     b.disabled = false;
   }
@@ -2510,7 +2596,7 @@ async function start() {
   const c = cacheGet(); if (c.cats) S.cats = c.cats;
   if (!T.id) loadTrips();
   run('getSettings').then(o => { S.cats = o.cats || {}; cacheSet(x => { x.cats = S.cats; }); }).catch(() => {});
-  run('me').then(m => { if (m.username !== ME.username) { ME.username = m.username; LS.set('ts_user', m.username); } }).catch(() => {});
+  run('me').then(m => { if (m.username !== ME.username) { ME.username = m.username; LS.set('ts_user', m.username); } ME.email = m.email || ''; const el = $('#acEmail'); if (el && document.activeElement !== el) el.value = ME.email; }).catch(() => {});
   flushOutbox(); // ลองส่งซ้ำรายการที่ค้างจากตอนก่อนหน้า (เช่น ปิดแอปกลางคันตอนกำลังบันทึก)
   if (QJOIN) { const q = QJOIN; QJOIN = ''; openJoin(q); }
 }

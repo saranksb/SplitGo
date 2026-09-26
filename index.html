@@ -500,6 +500,7 @@ const EN = {
   'เช่น TG682': 'e.g. TG682', 'วันบิน': 'Flight date', 'เวลาออก': 'Departs', 'เวลาถึง (เวลาท้องถิ่น)': 'Arrives (local time)', 'ต้นทาง': 'From', 'เช่น BKK': 'e.g. BKK',
   'เช่น HND': 'e.g. HND', 'รหัสการจอง (PNR)': 'Booking code (PNR)', 'ที่นั่ง': 'Seat', 'ราคาตั๋ว (บาท)': 'Ticket price (THB)', 'บอร์ดดิ้งพาส / e-ticket': 'Boarding pass / e-ticket',
   'โน้ต': 'Notes', 'เช่น น้ำหนักกระเป๋า, เทอร์มินัล, เกต': 'e.g. baggage, terminal, gate',
+  'ใครไปเที่ยวบินนี้': 'Who\'s on this flight', 'ใครพักที่นี่': 'Who\'s staying here', 'เฉพาะ {x}': 'Only {x}',
   'แก้ไขที่พัก': 'Edit stay', 'เพิ่มที่พัก': 'Add stay', 'ลิงก์แผนที่ (Google Maps หรือ Apple Maps)': 'Map link (Google Maps or Apple Maps)', 'ชื่อที่พัก': 'Name',
   'เช็คอิน': 'Check-in', 'เช็คเอาท์': 'Check-out', 'สถานะ': 'Status', 'ราคารวม (บาท)': 'Total price (THB)', 'รูป': 'Photo',
   'เช่น เลขที่จอง, เวลาเช็คอิน, ใกล้สถานีไหน': 'e.g. booking number, check-in time, nearest station', 'ใส่ชื่อที่พัก': 'Enter the name',
@@ -1639,6 +1640,11 @@ function flightBanner(fl) {
     <div class="co-tx"><b>${esc(label)}</b>${canCheckin ? `<div>${t('เปิดเช็คอินออนไลน์ได้แล้ว (ปกติเปิดก่อนบิน 24–48 ชม.)')}</div>` : ''}</div>
   </div>`;
 }
+// ป้ายชื่อ "เฉพาะ..." เมื่อเที่ยวบิน/ที่พักเป็นของบางคนในทริป ไม่ใช่ทุกคน
+function whoTag(r, x) {
+  if (!r.who || !r.who.length || r.who.length >= x.members.length) return '';
+  return `<span class="pill">${esc(tf('เฉพาะ {x}', { x: r.who.join(', ') }))}</span>`;
+}
 function viewOverview(x) {
   const fl = of('flight').sort((a, b) => ((a.date || '') + (a.dep || '')).localeCompare((b.date || '') + (b.dep || '')));
   const st = of('stay').sort((a, b) => (a.checkin || '').localeCompare(b.checkin || ''));
@@ -1659,7 +1665,7 @@ function viewOverview(x) {
   </div>
   <div class="block">${head('plane', t('เที่ยวบิน'), t('ตั๋ว เวลา และบอร์ดดิ้งพาส'), add('addFlight'))}
   ${fl.length ? fl.map(f => `<div class="ticket tap" data-act="editFlight" data-id="${esc(f.id)}">
-      <div class="tk-top"><span>${esc(t(f.dir))}, ${wday(f.date)} ${fmtD(f.date)}</span><span class="pill ${okF(f.status) ? 'ok' : 'no'}">${esc(t(f.status))}</span></div>
+      <div class="tk-top"><span>${esc(t(f.dir))}, ${wday(f.date)} ${fmtD(f.date)}</span><span class="pill ${okF(f.status) ? 'ok' : 'no'}">${esc(t(f.status))}</span>${whoTag(f, x)}</div>
       <div class="tk-route"><div><b class="${apCls(f.from)}">${esc(f.from || '—')}</b><small>${esc(f.dep || '')}</small></div>
         <div class="tk-line">${ico('air', 18)}</div>
         <div class="r"><b class="${apCls(f.to)}">${esc(f.to || '—')}</b><small>${esc(f.arr || '')}</small></div></div>
@@ -1671,7 +1677,7 @@ function viewOverview(x) {
   </div>
   <div class="block">${head('bed', t('ที่พัก'), t('เช็คอิน เช็คเอาท์ และลิงก์แผนที่'), add('addStay'))}
   ${st.length ? st.map(s => `<div class="ticket tap" data-act="editStay" data-id="${esc(s.id)}">
-      <div class="tk-top"><span>${fmtD(s.checkin)} – ${fmtD(s.checkout)}, ${tf('{n} คืน', { n: nights(s) })}</span><span class="pill ${s.status === 'จองแล้ว' ? 'ok' : 'no'}">${esc(t(s.status))}</span></div>
+      <div class="tk-top"><span>${fmtD(s.checkin)} – ${fmtD(s.checkout)}, ${tf('{n} คืน', { n: nights(s) })}</span><span class="pill ${s.status === 'จองแล้ว' ? 'ok' : 'no'}">${esc(t(s.status))}</span>${whoTag(s, x)}</div>
       <div class="tt serif" style="margin-top:4px;font-size:18px">${esc(s.name || t('ที่พัก'))}</div>
       ${s.price ? `<div class="meta"><span>${baht(s.price)}</span></div>` : ''}
       ${s.note ? `<div class="nt">${esc(s.note)}</div>` : ''}
@@ -1707,7 +1713,7 @@ function viewPlan(x) {
   const d = days[T.day], dc = dayColor(d);
   const items = [...of('stop'), ...of('leg')].filter(r => r.date === d).sort(byTime);
   const fls = of('flight').filter(f => f.date === d);
-  const stay = of('stay').find(s => s.checkin <= d && d < s.checkout);
+  const stays = of('stay').filter(s => s.checkin <= d && d < s.checkout);
   let prev = null;
   const tl = items.map(r => {
     if (r.kind === 'leg') return `<div class="tli leg tap" data-act="editLeg" data-id="${esc(r.id)}">
@@ -1730,10 +1736,10 @@ function viewPlan(x) {
   }).join('');
   return `<div class="days">${days.map((y, i) => `<button class="${i === T.day ? 'on' : ''}" style="--dc:${dayColor(y)}" data-act="day" data-i="${i}"><b>${tf('วันที่ {n}', { n: i + 1 })}</b><span>${wday(y)} ${fmtD(y)}</span></button>`).join('')}</div>
     <div class="dayhead" style="--dc:${dc}"><i></i><h2>${wday(d, true)}</h2><span>${fmtD(d)}</span></div>
-    ${fls.map(f => `<div class="banner">${ico('plane', 16)}${esc(t(f.dir))} ${esc(f.flightNo || '')} ${esc(f.dep || '')}  ${esc(f.from || '')} → ${esc(f.to || '')}</div>`).join('')}
+    ${fls.map(f => `<div class="banner">${ico('plane', 16)}${esc(t(f.dir))} ${esc(f.flightNo || '')} ${esc(f.dep || '')}  ${esc(f.from || '')} → ${esc(f.to || '')}${whoTag(f, x)}</div>`).join('')}
     <div class="block" style="--dc:${dc}"><div class="tl">${tl || `<div class="empty">${t('ยังไม่มีแผนวันนี้')}<br>${t('เริ่มจากเพิ่มสถานที่แรก')}</div>`}</div>
       <div class="pair"><button class="ghost" data-act="addStop">${ico('pin', 16)}${t('สถานที่')}</button><button class="ghost" data-act="addLeg">${ico('route', 16)}${t('การเดินทาง')}</button></div></div>
-    ${stay ? `<div class="banner">${ico('bed', 16)}${tf('คืนนี้พักที่ {x}', { x: esc(stay.name) })}</div>` : ''}`;
+    ${stays.map(s => `<div class="banner">${ico('bed', 16)}${tf('คืนนี้พักที่ {x}', { x: esc(s.name) })}${whoTag(s, x)}</div>`).join('')}`;
 }
 
 /* ----- ค่าใช้จ่าย & หารเงิน ----- */
@@ -2061,7 +2067,8 @@ function flightForm(f) {
       { k: 'seat', label: t('ที่นั่ง') },
       { k: 'price', label: t('ราคาตั๋ว (บาท)'), type: 'number' },
       { k: 'pass', label: t('บอร์ดดิ้งพาส / e-ticket'), type: 'photo' },
-      { k: 'note', label: t('โน้ต'), type: 'textarea', ph: t('เช่น น้ำหนักกระเป๋า, เทอร์มินัล, เกต') }
+      { k: 'note', label: t('โน้ต'), type: 'textarea', ph: t('เช่น น้ำหนักกระเป๋า, เทอร์มินัล, เกต') },
+      ...(x.members.length > 1 ? [{ k: 'who', label: t('ใครไปเที่ยวบินนี้'), type: 'checks', options: x.members }] : [])
     ],
     onSave: saver('flight'), onDelete: f ? deleter(f.id) : null
   });
@@ -2078,7 +2085,8 @@ function stayForm(s) {
       { k: 'status', label: t('สถานะ'), type: 'seg', options: ['ยังไม่จอง', 'จองแล้ว'] },
       { k: 'price', label: t('ราคารวม (บาท)'), type: 'number' },
       { k: 'photo', label: t('รูป'), type: 'photo' },
-      { k: 'note', label: t('โน้ต'), type: 'textarea', ph: t('เช่น เลขที่จอง, เวลาเช็คอิน, ใกล้สถานีไหน') }
+      { k: 'note', label: t('โน้ต'), type: 'textarea', ph: t('เช่น เลขที่จอง, เวลาเช็คอิน, ใกล้สถานีไหน') },
+      ...(x.members.length > 1 ? [{ k: 'who', label: t('ใครพักที่นี่'), type: 'checks', options: x.members }] : [])
     ],
     validate: o => !o.name ? t('ใส่ชื่อที่พัก') : o.checkout && o.checkin && o.checkout < o.checkin ? t('วันเช็คเอาท์ต้องหลังเช็คอิน') : '',
     onSave: saver('stay'), onDelete: s ? deleter(s.id) : null

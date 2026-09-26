@@ -11,8 +11,19 @@ const EXPORT_NAMES = [
   'T', 'ME', 'trip', 'of', 'money', 'baht', 'tm', 'fmtRate', 'num', 'cardState'
 ];
 
+// index.html โหลดโค้ดจริงผ่าน <script src="js/xxx.js">; jsdom ไม่ดึงไฟล์ภายนอกให้เอง
+// จึงต้องอ่านแต่ละไฟล์มาแปะแทนที่ตรงๆ ก่อนส่งให้ jsdom (เนื้อหาเหมือนที่ browser โหลดจริงทุกตัวอักษร)
+function inlineExternalScripts(html, rootDir) {
+  return html.replace(/<script src="([^"]+)"><\/script>/g, (whole, src) => {
+    const code = fs.readFileSync(path.join(rootDir, src), 'utf8');
+    return `<script>${code}</script>`;
+  });
+}
+
 function loadApp() {
-  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const rootDir = path.join(__dirname, '..');
+  const rawHtml = fs.readFileSync(path.join(rootDir, 'index.html'), 'utf8');
+  const html = inlineExternalScripts(rawHtml, rootDir);
   const errors = [];
   const dom = new JSDOM(html, {
     url: 'https://split-and-go.test/',

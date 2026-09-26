@@ -88,7 +88,7 @@ function viewOverview(x) {
       <div class="meta">${[f.flightNo, f.airline, f.ref && tf('รหัสจอง {x}', { x: f.ref }), f.seat && tf('ที่นั่ง {x}', { x: f.seat })].filter(Boolean).map(y => `<span>${esc(y)}</span>`).join('')}</div>
       ${f.note ? `<div class="nt">${esc(f.note)}</div>` : ''}
       ${f.pass || f.flightNo ? `<div class="acts">${thumb(f.pass)}
-        ${f.flightNo ? extLink('https://www.google.com/search?q=' + enc(f.flightNo + ' flight status'), 'ext', t('สถานะเที่ยวบิน')) : ''}</div>` : ''}
+        ${f.flightNo ? extLink(flightStatusLink(f.flightNo), 'ext', t('สถานะเที่ยวบิน')) : ''}</div>` : ''}
     </div>`).join('') : `<div class="empty">${t('ยังไม่มีเที่ยวบิน')}<br>${t('ถ้าเดินทางด้วยรถ ข้ามส่วนนี้ได้')}</div>`}
   </div>
   <div class="block">${head('bed', t('ที่พัก'), t('เช็คอิน เช็คเอาท์ และลิงก์แผนที่'), add('addStay'))}

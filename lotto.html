@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>เลขมงคล (Gambler's Fallacy) - Split&amp;Go Labs</title>
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600&family=Noto+Serif+Thai:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F5EDD6; --surface:#FBF7EA; --sunk:#EFE6CB; --line:#E3D8B9;
+  --ink:#23291F; --ink2:#5B6453; --ink3:#8C9280;
+  --brand:#7E9B75; --brand-ink:#44603E; --brand-soft:#E4E6CC; --on-brand:#FBF7EA;
+  --out:#A9533F; --in:#4A7541; --warn:#9A6A1C;
+  --serif:"Noto Serif Thai","Noto Serif",Georgia,serif;
+  --sans:"Anuphan","Sukhumvit Set","Thonburi",-apple-system,system-ui,sans-serif;
+  --shadow:0 1px 0 rgba(68,96,62,.05),0 8px 24px -12px rgba(68,96,62,.18);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#141A13; --surface:#1C2419; --sunk:#232C20; --line:#2F3A2B;
+    --ink:#F2EAD3; --ink2:#C3BDA7; --ink3:#8A907E;
+    --brand:#9CB792; --brand-ink:#B9CEAF; --brand-soft:#2A3626; --on-brand:#141A13;
+    --out:#E28F79; --in:#A2C996; --warn:#E3B062;
+    --shadow:0 1px 0 rgba(0,0,0,.2),0 10px 26px -14px rgba(0,0,0,.6);
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg)}
+body{margin:0 auto;max-width:640px;color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;
+  padding:calc(env(safe-area-inset-top) + 20px) 16px calc(env(safe-area-inset-bottom) + 40px);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+[hidden]{display:none!important}
+.num{font-variant-numeric:tabular-nums}
+h1,.serif{font-family:var(--serif);letter-spacing:-.005em}
+h1{font-size:26px;font-weight:600;margin:0 0 4px}
+h2{font-size:17px;font-weight:600;margin:0 0 2px}
+p.sub{color:var(--ink2);font-size:13px;margin:0 0 18px}
+.block{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:18px;margin-bottom:14px;box-shadow:var(--shadow)}
+.block h2{margin-bottom:10px}
+.callout{display:flex;gap:10px;align-items:flex-start;background:var(--brand-soft);border:1px solid var(--brand);border-radius:14px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:var(--ink)}
+.callout b{display:block;margin-bottom:2px}
+.warn-box{background:var(--sunk);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:12px;font-size:13px;color:var(--ink2)}
+label{display:block;font-size:12px;color:var(--ink2);margin:0 0 4px}
+input[type=text],input[type=date],input[type=number],select{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:9px 10px;font-size:14px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px}
+.field{margin-bottom:10px}
+.btn{border:0;border-radius:12px;background:var(--brand-ink);color:var(--on-brand);font-size:14px;font-weight:600;padding:10px 16px;display:inline-flex;align-items:center;gap:6px}
+.btn.ghost{background:var(--sunk);color:var(--ink)}
+.btn.small{padding:6px 12px;font-size:13px;border-radius:9px}
+.btn:disabled{opacity:.5}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--ink3);font-weight:500;font-size:12px}
+td.num{font-variant-numeric:tabular-nums;font-weight:600}
+.scrollx{overflow-x:auto}
+.badge{display:inline-flex;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600}
+.badge.win{background:var(--in);color:var(--on-brand)}
+.badge.lose{background:var(--sunk);color:var(--ink3)}
+.badge.pending{background:var(--warn);color:var(--on-brand)}
+.tabs2{display:flex;gap:4px;background:var(--sunk);border-radius:14px;padding:4px;margin-bottom:14px;flex-wrap:wrap}
+.tabs2 button{flex:1;min-width:70px;border:0;background:none;padding:8px 4px;border-radius:10px;font-size:12px;font-weight:500;color:var(--ink2)}
+.tabs2 button.on{background:var(--surface);color:var(--brand-ink);box-shadow:0 1px 3px rgba(35,41,31,.12)}
+.pos-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:10px}
+.pos-card{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:8px}
+.pos-card h3{font-size:11px;color:var(--ink3);margin:0 0 6px;font-weight:500}
+.pos-card .d{display:flex;justify-content:space-between;font-size:13px;padding:2px 0}
+.pos-card .d b{font-variant-numeric:tabular-nums}
+.pos-card .d small{color:var(--ink3)}
+.suggest{font-family:var(--serif);font-size:32px;font-weight:600;letter-spacing:.08em;text-align:center;margin:10px 0;color:var(--brand-ink)}
+.foot-note{font-size:11px;color:var(--ink3);text-align:center;margin-top:6px}
+.del{border:0;background:none;color:var(--out);font-size:16px;line-height:1;padding:2px 6px}
+.status-line{font-size:12px;color:var(--ink3);margin:6px 0}
+.actions-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+details{margin-top:10px}
+summary{cursor:pointer;font-size:13px;color:var(--brand-ink);font-weight:500}
+</style>
+</head>
+<body>
+
+<h1>🔮 เลขมงคล (สนุกๆ)</h1>
+<p class="sub">เครื่องมือทดลองใช้ทฤษฎี <b>Gambler's Fallacy</b> เพื่อความบันเทิง — เก็บเลขที่เคยซื้อ ดูสถิติงวดที่ผ่านมา และดูตัวชี้วัด "เลขค้างงวด"</p>
+
+<div class="callout">
+  <div>
+    <b>⚠️ เพื่อความสนุกเท่านั้น</b>
+    แต่ละงวดของสลากกินแบ่งรัฐบาลเป็นอิสระจากกันทางสถิติ 100% "เลขที่ไม่ออกมานาน" ไม่ได้มีโอกาสออกมากกว่าเลขอื่นเลยแม้แต่น้อย — ตัวชี้วัดในหน้านี้คำนวณจากความเชื่อผิดๆ ตามทฤษฎี Gambler's Fallacy ล้วนๆ ไม่ใช่การพยากรณ์ที่แม่นยำ ห้ามใช้ตัดสินใจทางการเงินจริงจัง
+  </div>
+</div>
+
+<div class="block">
+  <h2>⚙️ ตั้งค่าแหล่งข้อมูล</h2>
+  <div class="field">
+    <label>API base URL (ผลรางวัลสลากฯ ย้อนหลัง)</label>
+    <input type="text" id="api-base">
+  </div>
+  <div class="actions-row">
+    <button class="btn small ghost" id="btn-reset-api">รีเซ็ตเป็นค่าเริ่มต้น</button>
+    <button class="btn small ghost" id="btn-clear-cache">ล้างแคชผลรางวัล</button>
+  </div>
+  <p class="status-line" id="api-status"></p>
+</div>
+
+<div class="block">
+  <h2>🎟️ เลขที่เคยซื้อ</h2>
+  <div class="row2">
+    <div class="field" style="margin-bottom:0">
+      <label>งวดวันที่</label>
+      <input type="date" id="tk-date">
+    </div>
+    <div class="field" style="margin-bottom:0">
+      <label>ประเภทรางวัล</label>
+      <select id="tk-type">
+        <option value="back2">เลขท้าย 2 ตัว</option>
+        <option value="front3">3 ตัวหน้า</option>
+        <option value="back3">3 ตัวท้าย</option>
+        <option value="prizeFirst">รางวัลที่ 1 (6 หลัก)</option>
+      </select>
+    </div>
+  </div>
+  <div class="row2">
+    <div class="field" style="margin-bottom:0">
+      <label>เลขที่ซื้อ</label>
+      <input type="text" id="tk-number" inputmode="numeric" pattern="[0-9]*" placeholder="เช่น 45">
+    </div>
+    <div class="field" style="margin-bottom:0">
+      <label>จำนวนเงิน (ไม่บังคับ)</label>
+      <input type="number" id="tk-amount" placeholder="บาท">
+    </div>
+  </div>
+  <button class="btn" id="btn-add-ticket">+ เพิ่มรายการ</button>
+
+  <div class="scrollx" style="margin-top:14px">
+    <table id="tk-table">
+      <thead><tr><th>งวด</th><th>ประเภท</th><th>เลข</th><th>ผล</th><th></th></tr></thead>
+      <tbody id="tk-body"></tbody>
+    </table>
+  </div>
+  <p class="empty status-line" id="tk-empty" hidden>ยังไม่มีรายการที่บันทึกไว้</p>
+  <div class="actions-row">
+    <button class="btn small ghost" id="btn-export">ส่งออกเป็นไฟล์ JSON</button>
+    <label class="btn small ghost" style="margin:0">
+      นำเข้าไฟล์ JSON
+      <input type="file" id="import-file" accept="application/json" hidden>
+    </label>
+  </div>
+</div>
+
+<div class="block">
+  <h2>📜 สถิติผลรางวัลย้อนหลัง</h2>
+  <p class="status-line" id="hist-status">กำลังโหลด…</p>
+  <div class="scrollx">
+    <table>
+      <thead><tr><th>งวด</th><th>รางวัลที่ 1</th><th>3 ตัวหน้า</th><th>3 ตัวท้าย</th><th>เลขท้าย 2 ตัว</th></tr></thead>
+      <tbody id="hist-body"></tbody>
+    </table>
+  </div>
+  <div class="actions-row">
+    <button class="btn small ghost" id="btn-refresh-latest">ดึงงวดล่าสุด</button>
+    <button class="btn small ghost" id="btn-load-more">โหลดย้อนหลังเพิ่ม</button>
+  </div>
+  <details>
+    <summary>+ เพิ่มผลรางวัลย้อนหลังด้วยตนเอง (เผื่อดึงจาก API ไม่ได้)</summary>
+    <div style="margin-top:10px">
+      <div class="row2">
+        <div class="field" style="margin-bottom:0"><label>งวดวันที่</label><input type="date" id="man-date"></div>
+        <div class="field" style="margin-bottom:0"><label>รางวัลที่ 1 (6 หลัก)</label><input type="text" id="man-p1" maxlength="6" inputmode="numeric"></div>
+      </div>
+      <div class="row3">
+        <div class="field" style="margin-bottom:0"><label>3 ตัวหน้า (คั่นด้วย ,)</label><input type="text" id="man-f3" placeholder="123,456"></div>
+        <div class="field" style="margin-bottom:0"><label>3 ตัวท้าย (คั่นด้วย ,)</label><input type="text" id="man-b3" placeholder="789,012"></div>
+        <div class="field" style="margin-bottom:0"><label>เลขท้าย 2 ตัว</label><input type="text" id="man-b2" maxlength="2" inputmode="numeric"></div>
+      </div>
+      <button class="btn small" id="btn-manual-add">บันทึกผลงวดนี้</button>
+    </div>
+  </details>
+</div>
+
+<div class="block">
+  <h2>📊 ตัวชี้วัด "เลขค้างงวด" (Gambler's Fallacy)</h2>
+  <p class="sub" style="margin-bottom:12px">ยิ่ง "ค้างงวด" มาก = ยิ่งไม่ได้ออกมานาน (ตามความเชื่อนี้ = "ใกล้จะออก" ทั้งที่จริงไม่เกี่ยวกันเลย)</p>
+  <div class="tabs2">
+    <button data-tab="back2" class="on">เลขท้าย 2 ตัว</button>
+    <button data-tab="front3">3 ตัวหน้า</button>
+    <button data-tab="back3">3 ตัวท้าย</button>
+    <button data-tab="prizeFirst">รางวัลที่ 1</button>
+  </div>
+  <div id="indicator-panel"></div>
+  <div class="suggest" id="suggest-number">--</div>
+  <p class="foot-note">เลขแนะนำจากทฤษฎี (ไม่ใช่การพยากรณ์จริง) — สุ่มใหม่ได้เรื่อยๆ เพื่อความสนุก</p>
+</div>
+
+<script src="js/lotto.js"></script>
+</body>
+</html>

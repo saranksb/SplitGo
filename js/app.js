@@ -19,6 +19,8 @@ $('#trips').addEventListener('click', e => {
     addExp: () => expForm(), editExp: () => expForm(rec(id)), detail: () => expDetail(id),
     doSettle: () => settleForm({ from: b.dataset.from, to: b.dataset.to, amount: +b.dataset.amt, cur: 'THB' }),
     who: () => { T.who = b.dataset.v; T.catAll = false; renderTrips(); },
+    mSec: () => { T.mSec = b.dataset.v; T.mDay = null; renderTrips(); },
+    mDay: () => { const v = b.dataset.d || null; T.mDay = T.mDay === v ? null : v; renderTrips(); },
     catAll: () => { T.catAll = !T.catAll; renderTrips(); },
     editSettle: () => settleForm(rec(id)),
     addTopup: () => topupForm(), editTopup: () => topupForm(rec(id)),

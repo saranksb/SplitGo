@@ -15,7 +15,8 @@ const EXPORT_NAMES = [
 // จึงต้องอ่านแต่ละไฟล์มาแปะแทนที่ตรงๆ ก่อนส่งให้ jsdom (เนื้อหาเหมือนที่ browser โหลดจริงทุกตัวอักษร)
 function inlineExternalScripts(html, rootDir) {
   return html.replace(/<script src="([^"]+)"><\/script>/g, (whole, src) => {
-    const code = fs.readFileSync(path.join(rootDir, src), 'utf8');
+    const filePath = src.split('?')[0]; // ตัด ?v=... (cache-busting) ทิ้งก่อนอ่านไฟล์จริง
+    const code = fs.readFileSync(path.join(rootDir, filePath), 'utf8');
     return `<script>${code}</script>`;
   });
 }

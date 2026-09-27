@@ -276,19 +276,15 @@ function viewMoney(x) {
     return `<div class="hero"><div class="lbl">${label}</div><div class="big num">${tm(sum(items))}</div>
       ${isFx() ? `<div class="lbl num">≈ ${baht(sumThb(items))}${est.length ? ', ' + tf('{n} รายการยังเป็นยอดประมาณ', { n: est.length }) : ''}</div>` : ''}</div>`; };
 
-  if (!multi) { const items = all.sort(byNew);
-    return heroOf(t('ใช้ไปทั้งทริป'), items) + catBlock(x, items, false) + `
-    <div class="block">${head('list', t('รายการ'), t('เรียงตามวัน ล่าสุดอยู่บน'))}
-      ${items.length ? expList(items, x) : `<div class="empty">${t('ยังไม่มีค่าใช้จ่าย')}</div>`}</div>`; }
-
   const { bal, paid, used } = balances(tripItems);
   const est = tripItems.filter(estimated), sug = suggestPay(bal);
   const sets = of('settle').sort(byNew);
+  // "ใครจ่าย ใครใช้" กับ "ต้องคืนเงิน" มีความหมายเฉพาะตอนมีคนอื่นในทริปด้วย คนเดียวไม่มีใครต้องหารด้วย
   const sharedSection = `${sectionHead('users', t('ค่าใช้จ่ายที่แชร์กับคนในทริป'), tm(sum(tripItems)))}
   ${heroOf(t('ค่าใช้จ่ายทริป'), tripItems)}
-  ${myBlock(bal, paid, used)}
-  ${catBlock(x, tripItems, true)}
-  <div class="block">${head('users', t('ใครจ่าย ใครใช้'), isFx() ? t('ยอดเป็นเงินบาท ทุกคนเห็นตรงกัน') : t('ยอดที่แต่ละคนจ่ายและใช้จริง'))}
+  ${multi ? myBlock(bal, paid, used) : ''}
+  ${catBlock(x, tripItems, multi)}
+  ${multi ? `<div class="block">${head('users', t('ใครจ่าย ใครใช้'), isFx() ? t('ยอดเป็นเงินบาท ทุกคนเห็นตรงกัน') : t('ยอดที่แต่ละคนจ่ายและใช้จริง'))}
     ${x.members.map(m => { const b = Math.round((bal[m] || 0) * 100) / 100;
       return `<div class="who"><div>${esc(m)}${m === me ? ' ' + t('(คุณ)') : ''}</div><div class="v num ${b > 0 ? 'in' : b < 0 ? 'out' : ''}">${b > 0 ? tf('ได้คืน {x}', { x: baht(b) }) : b < 0 ? tf('ค้าง {x}', { x: baht(-b) }) : t('เคลียร์แล้ว')}</div>
         <div class="s">${tf('จ่ายไป {a}  ใช้ {b}', { a: baht(paid[m] || 0), b: baht(used[m] || 0) })}</div></div>`; }).join('')}</div>
@@ -300,7 +296,7 @@ function viewMoney(x) {
     ${est.length && sug.length ? `<div class="tiny">${t('บางรายการยังใช้เรทประมาณ ยอดจะตรงขึ้นเมื่อใส่ยอดเงินบาทที่ถูกตัดจริง')}</div>` : ''}
     ${sets.length ? `<div class="dh" style="margin-top:16px"><span>${t('ประวัติการคืนเงิน')}</span></div>` + sets.map(s => `<div class="row tap" data-act="editSettle" data-id="${esc(s.id)}">
       <div class="c"><div class="t">${esc(s.from)} → ${esc(s.to)}</div><div class="s">${fmtD(s.date)}, ${esc(t(s.method))}</div></div><div class="v num">${money(s.amount, s.cur || x.currency)}</div></div>`).join('') : ''}
-  </div>
+  </div>` : ''}
   <div class="block">${head('list', t('รายการค่าใช้จ่ายทริป'), t('เรียงตามวัน ล่าสุดอยู่บน'))}
     ${tripItems.length ? expList(tripItems, x) : `<div class="empty">${t('ยังไม่มีค่าใช้จ่าย')}</div>`}</div>`;
   const personalSection = `${sectionHead('lock', t('ค่าใช้จ่ายส่วนตัวของฉัน'), tm(sum(personal)))}

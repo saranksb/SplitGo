@@ -24,6 +24,7 @@ $('#trips').addEventListener('click', e => {
     addTopup: () => topupForm(), editTopup: () => topupForm(rec(id)),
     addCheck: () => checkForm(), editCheck: () => checkForm(rec(id)), toggleCheck: () => toggleCheck(id),
     addContact: () => contactForm(), editContact: () => contactForm(rec(id)),
+    addContactPreset: () => contactForm(null, b.dataset.title),
     shareSummary: () => shareSummary(),
     editBudget: () => budgetForm(),
     view: () => viewPhoto(id)

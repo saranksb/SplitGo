@@ -135,6 +135,8 @@ const EN = {
   'เบอร์ฉุกเฉิน': 'Emergency contacts', 'สถานทูตไทยและเบอร์ฉุกเฉินท้องถิ่น': 'Thai embassy and local emergency numbers',
   'ยังไม่มีเบอร์ติดต่อฉุกเฉิน': 'No emergency contacts yet', 'เลือกประเทศตอนแก้ไขทริป แอปจะเติมให้อัตโนมัติ': 'Pick a country when editing the trip and the app fills these in automatically',
   'เพิ่มเบอร์ติดต่อฉุกเฉิน': 'Add emergency contact', 'แก้ไขเบอร์ติดต่อ': 'Edit contact', 'ชื่อ': 'Name', 'เช่น สถานทูตไทย, โรงพยาบาลใกล้ที่พัก': 'e.g. Thai embassy, hospital near your hotel', 'ใส่ชื่อผู้ติดต่อ': 'Enter a contact name',
+  'เพิ่มเบอร์ของฉันเอง': 'Add your own', 'คนที่บ้าน': 'Family at home',
+  'ประกันเดินทาง (สายด่วนฉุกเฉิน)': 'Travel insurance (emergency hotline)', 'ธนาคาร/บัตร แจ้งบัตรหาย': 'Bank/card - report lost card',
   'เบอร์โทร': 'Phone number', 'โน้ต / เวลาติดต่อ': 'Note / contact hours', 'เช่น Hotline ฉุกเฉิน 24 ชม.': 'e.g. 24hr emergency hotline',
   'แชร์สรุป': 'Share summary', 'บันทึกรูปสรุปทริปแล้ว': 'Trip summary image saved', 'สร้างรูปสรุปไม่สำเร็จ': 'Could not create the summary image',
   'บินวันนี้!': 'Flying today!', 'เปิดเช็คอินออนไลน์ได้แล้ว (ปกติเปิดก่อนบิน 24–48 ชม.)': 'Online check-in should be open now (usually opens 24–48hrs before departure)',

@@ -101,6 +101,12 @@ function viewOverview(x) {
     </div>`).join('') : `<div class="empty">${t('ยังไม่มีที่พัก')}</div>`}
   </div>
   <div class="block">${head('siren', t('เบอร์ฉุกเฉิน'), t('สถานทูตไทยและเบอร์ฉุกเฉินท้องถิ่น'), add('addContact'))}
+  <div class="pick">
+    <span class="tiny" style="align-self:center">${t('เพิ่มเบอร์ของฉันเอง')}:</span>
+    <button type="button" class="chip" data-act="addContactPreset" data-title="${esc(t('ประกันเดินทาง (สายด่วนฉุกเฉิน)'))}">${ico('shield', 15)}${t('ประกัน')}</button>
+    <button type="button" class="chip" data-act="addContactPreset" data-title="${esc(t('ธนาคาร/บัตร แจ้งบัตรหาย'))}">${ico('card', 15)}${t('บัตร/ธนาคาร')}</button>
+    <button type="button" class="chip" data-act="addContactPreset" data-title="${esc(t('คนที่บ้าน'))}">${ico('phone', 15)}${t('คนที่บ้าน')}</button>
+  </div>
   ${contacts.length ? contacts.map(c => `<div class="ticket">
       <div class="tt serif" style="font-size:17px">${esc(t(c.title))}</div>
       ${c.phone ? `<a class="callnum" href="tel:${esc(String(c.phone).replace(/[^0-9+]/g, ''))}">${ico('phone', 16)}${esc(c.phone)}</a>` : ''}

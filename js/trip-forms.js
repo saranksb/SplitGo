@@ -148,9 +148,9 @@ function toggleCheck(id) {
   const c = rec(id); if (!c) return;
   saver('check')({ ...c, done: !c.done });
 }
-function contactForm(c) {
+function contactForm(c, presetTitle) {
   openForm({
-    title: t(c ? 'แก้ไขเบอร์ติดต่อ' : 'เพิ่มเบอร์ติดต่อฉุกเฉิน'), data: c || {},
+    title: t(c ? 'แก้ไขเบอร์ติดต่อ' : 'เพิ่มเบอร์ติดต่อฉุกเฉิน'), data: c || (presetTitle ? { title: presetTitle } : {}),
     fields: [
       { k: 'title', label: t('ชื่อ'), ph: t('เช่น สถานทูตไทย, โรงพยาบาลใกล้ที่พัก') },
       { k: 'phone', label: t('เบอร์โทร'), ph: t('เช่น +81-90-4435-7812') },

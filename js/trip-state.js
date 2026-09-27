@@ -98,6 +98,9 @@ function tripDays(x) {
 }
 const dayOpts = () => tripDays(trip()).map((d, i) => [d, `${tf('วันที่ {n}', { n: i + 1 })} — ${wday(d)} ${fmtD(d)}`]);
 const curDay = () => tripDays(trip())[T.day] || trip().start;
+// วันที่เริ่มต้นตอนเปิดฟอร์ม "เพิ่มค่าใช้จ่าย": ใช้วันนี้ถ้าอยู่ในช่วงทริป (ตรงกับตอนใช้จ่ายจริงระหว่างเที่ยว)
+// ไม่ใช่วันที่บังเอิญเปิดแท็บ "แผนรายวัน" ค้างไว้ดูอยู่ (curDay) ซึ่งอาจเป็นคนละวันกัน
+const expenseDay = () => { const d = ymd(new Date()); return tripDays(trip()).includes(d) ? d : curDay(); };
 const tm = n => money(n, trip().currency);
 
 /* ----- แปลงเป็นเงินบาท -----

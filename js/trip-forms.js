@@ -283,7 +283,7 @@ function expForm(e, preset) {
   const x = trip(); ensureRate();
   openForm({
     title: t(e ? 'แก้ไขค่าใช้จ่าย' : 'เพิ่มค่าใช้จ่าย'),
-    data: e || { date: curDay(), payer: myName(), method: 'เงินสด', category: 'อาหาร', mode: (preset && preset.mode) || (x.members.length > 1 ? 'equal' : 'self'),
+    data: e || { date: expenseDay(), payer: myName(), method: 'เงินสด', category: 'อาหาร', mode: (preset && preset.mode) || (x.members.length > 1 ? 'equal' : 'self'),
       tcMode: cardState().fxLeft > 0 ? TC_PRE : TC_AUTO },
     autoTc: !e,
     fields: [

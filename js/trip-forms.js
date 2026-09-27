@@ -33,8 +33,9 @@ function tripForm(x) {
       const r = await run('saveRec', o);
       if (isNew) {
         navPush(); T.id = r.id; T.recs = [r]; T.thumbs = {}; T.rates = {}; T.sub = 'overview'; T.day = 0;
-        await addDefaultChecklist(r); await addDefaultContacts(r);
+        await addDefaultChecklist(r);
       } else upsert(r);
+      await addDefaultContacts(r); // เติม/อัปเดตเบอร์ฉุกเฉิน ทั้งตอนสร้างใหม่และแก้ไข (เพิ่งมาเลือก/เปลี่ยนประเทศทีหลังก็ได้)
       renderTrips(); toast(t('บันทึกทริปแล้ว'));
     },
     delLabel: t('ลบทริปนี้ทั้งหมด'),
@@ -54,19 +55,25 @@ async function addDefaultChecklist(trip) {
     try { const r = await run('saveRec', { kind: 'check', tripId: trip.id, title, icon, done: false }); upsert(r); } catch (e) {}
   }
 }
-// เพิ่มเบอร์ฉุกเฉิน/สถานทูตไทยอัตโนมัติ ตามประเทศที่เลือกตอนสร้างทริป
+// เพิ่ม/อัปเดตเบอร์ฉุกเฉิน-สถานทูตไทยอัตโนมัติ ตามประเทศที่เลือก
+// เรียกได้ทั้งตอนสร้างทริปใหม่และแก้ไขทริปเดิม (เช่น เพิ่งมาเลือกประเทศทีหลัง หรือเปลี่ยนประเทศ)
+// จับคู่ด้วยชื่อหัวข้อ (title) เพื่ออัปเดตของเดิมแทนที่จะเพิ่มซ้ำทุกครั้งที่บันทึกทริป
 async function addDefaultContacts(trip) {
   if (trip.scope !== 'ต่างประเทศ') return;
-  const contacts = [];
+  const existing = of('contact').filter(c => c.tripId === trip.id);
+  const upsertByTitle = async (title, phone, note) => {
+    const found = existing.find(c => c.title === title);
+    const rec = { kind: 'contact', tripId: trip.id, title, phone, note };
+    if (found) rec.id = found.id;
+    try { const r = await run('saveRec', rec); upsert(r); } catch (e2) {}
+  };
   const e = EMBASSY[trip.country];
   if (e) {
-    contacts.push({ title: t('สถานทูตไทย'), phone: e.phone, note: tf('{c}{m}', { c: e.city, m: e.more ? ' · ' + e.more : '' }) });
-    contacts.push({ title: t('เบอร์ฉุกเฉินท้องถิ่น'), phone: e.emg.match(/\d[\d\/]*\d|\d/)?.[0] || '', note: e.emg });
+    await upsertByTitle(t('สถานทูตไทย'), e.phone, tf('{c}{m}', { c: e.city, m: e.more ? ' · ' + e.more : '' }));
+    await upsertByTitle(t('เบอร์ฉุกเฉินท้องถิ่น'), e.emg.match(/\d[\d\/]*\d|\d/)?.[0] || '', e.emg);
   }
-  contacts.push({ title: t('กรมการกงสุล (Call Center 24 ชม.)'), phone: '+66-2-572-8442', note: t('โทรจากไทย 0-2572-8442') });
-  for (const c of contacts) {
-    try { const r = await run('saveRec', { kind: 'contact', tripId: trip.id, ...c }); upsert(r); } catch (e2) {}
-  }
+  if (!existing.some(c => c.title === t('กรมการกงสุล (Call Center 24 ชม.)')))
+    await upsertByTitle(t('กรมการกงสุล (Call Center 24 ชม.)'), '+66-2-572-8442', t('โทรจากไทย 0-2572-8442'));
 }
 async function dupTrip(tripId) {
   try {

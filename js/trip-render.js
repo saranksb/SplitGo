@@ -169,7 +169,7 @@ function expenseItems() {
   const x = trip();
   const legs = of('leg').filter(l => l.cost > 0).map(l => ({ id: l.id, origin: 'leg', title: `${modeLabel(l.mode)} ${l.from || ''} → ${l.to || ''}`,
     date: l.date, amount: l.cost, payer: l.payer || x.members[0], method: l.method || 'เงินสด', mode: 'equal', by: l.by,
-    members: l.members && l.members.length ? l.members : x.members, category: 'เดินทาง', rate: l.rate, thbActual: l.thbActual, tcMode: l.tcMode, note: l.note, _pend: l._pend }));
+    members: l.members && l.members.length ? l.members : x.members, category: 'เดินทาง', tmode: l.mode, rate: l.rate, thbActual: l.thbActual, tcMode: l.tcMode, note: l.note, _pend: l._pend }));
   return [...of('exp').map(e => Object.assign({}, e, { origin: 'exp' })), ...legs];
 }
 function shares(e) {
@@ -253,17 +253,18 @@ function myBlock(bal, paid, used) {
     <span>${t(b > 0 ? 'เพื่อนต้องคืนฉัน' : b < 0 ? 'ฉันต้องคืนเพื่อน' : 'ยอดค้าง')}</span>
     <b class="num ${b > 0 ? 'in' : b < 0 ? 'out' : ''}">${b ? baht(Math.abs(b)) : t('เคลียร์แล้ว')}</b></div></div>`;
 }
+// ไอคอนของแต่ละรายการ: ถ้ามาจาก "การเดินทาง" ในแผนรายวัน ใช้ไอคอนตามพาหนะ (แท็กซี่/รถเมล์/รถไฟ ฯลฯ) แทนไอคอนหมวดทั่วไป
+const expIco = e => (e.origin === 'leg' && MODEI[e.tmode]) || catIco(e.category);
 // รายการค่าใช้จ่าย จัดกลุ่มตามวัน แตะแล้วเปิดดูรายละเอียดก่อน
 function expList(items, x) {
   const byDate = {}; items.forEach(e => (byDate[e.date || ''] = byDate[e.date || ''] || []).push(e));
   return Object.keys(byDate).map(d => `<div class="dh" style="--dc:${d ? dayColor(d) : 'var(--ink3)'}"><i class="dd"></i><span>${d ? wday(d) + ' ' + fmtD(d) : t('ไม่ระบุวัน')}</span><span class="sp"></span><span class="num">${tm(byDate[d].reduce((a, e) => a + e.amount, 0))}</span></div>` +
     byDate[d].map(e => `<div class="row tap${e._pend ? ' pend' : ''}" data-act="detail" data-id="${esc(e.id)}">
-      <span class="ic">${ico(catIco(e.category), 19)}</span>
+      <span class="ic">${ico(expIco(e), 19)}</span>
       <div class="c"><div class="t">${esc(e.title || t(e.category))}${e.photo ? ico('camera', 14) : ''}${estimated(e) ? `<span class="pill est">${t('ยอดประมาณ')}</span>` : ''}</div>
       <div class="s">${e.title ? esc(t(e.category)) + ', ' : ''}${e.mode === 'self' ? '' : tf('{x} จ่าย', { x: esc(e.payer) }) + ', '}${esc(t(e.method))}${e.mode === 'self' ? '' : ', ' + splitLabel(e, x)}${recBy(e)}</div></div>
       <div class="v num">${tm(e.amount)}${isFx() ? `<small>${estimated(e) ? '≈ ' : ''}${baht(thbOf(e))}</small>` : ''}</div></div>`).join('')).join('');
 }
-const sectionHead = (icon, title, sum) => `<div class="sechead">${ico(icon, 18)}<b>${title}</b><span class="num">${sum}</span></div>`;
 function viewMoney(x) {
   const multi = x.members.length > 1, me = myName();
   const byNew = (a, b) => (b.date || '').localeCompare(a.date || '');
@@ -276,35 +277,52 @@ function viewMoney(x) {
     return `<div class="hero"><div class="lbl">${label}</div><div class="big num">${tm(sum(items))}</div>
       ${isFx() ? `<div class="lbl num">≈ ${baht(sumThb(items))}${est.length ? ', ' + tf('{n} รายการยังเป็นยอดประมาณ', { n: est.length }) : ''}</div>` : ''}</div>`; };
 
-  const { bal, paid, used } = balances(tripItems);
-  const est = tripItems.filter(estimated), sug = suggestPay(bal);
-  const sets = of('settle').sort(byNew);
-  // "ใครจ่าย ใครใช้" กับ "ต้องคืนเงิน" มีความหมายเฉพาะตอนมีคนอื่นในทริปด้วย คนเดียวไม่มีใครต้องหารด้วย
-  const sharedSection = `${sectionHead('users', t('ค่าใช้จ่ายที่แชร์กับคนในทริป'), tm(sum(tripItems)))}
-  ${heroOf(t('ค่าใช้จ่ายทริป'), tripItems)}
-  ${multi ? myBlock(bal, paid, used) : ''}
-  ${catBlock(x, tripItems, multi)}
-  ${multi ? `<div class="block">${head('users', t('ใครจ่าย ใครใช้'), isFx() ? t('ยอดเป็นเงินบาท ทุกคนเห็นตรงกัน') : t('ยอดที่แต่ละคนจ่ายและใช้จริง'))}
-    ${x.members.map(m => { const b = Math.round((bal[m] || 0) * 100) / 100;
-      return `<div class="who"><div>${esc(m)}${m === me ? ' ' + t('(คุณ)') : ''}</div><div class="v num ${b > 0 ? 'in' : b < 0 ? 'out' : ''}">${b > 0 ? tf('ได้คืน {x}', { x: baht(b) }) : b < 0 ? tf('ค้าง {x}', { x: baht(-b) }) : t('เคลียร์แล้ว')}</div>
-        <div class="s">${tf('จ่ายไป {a}  ใช้ {b}', { a: baht(paid[m] || 0), b: baht(used[m] || 0) })}</div></div>`; }).join('')}</div>
-  <div class="block">${head('swap', t('ต้องคืนเงิน'), t('โอนน้อยครั้งที่สุดให้ครบ'))}
-    ${sug.length ? sug.map(s => `<div class="row"><div class="c"><div class="t">${esc(s.from)} → ${esc(s.to)}</div>
-      <div class="s num">${baht(s.amount)}${isFx() && +x.rate ? `  (≈ ${tm(s.amount / x.rate)})` : ''}</div></div>
-      <button class="ghost" data-act="doSettle" data-from="${esc(s.from)}" data-to="${esc(s.to)}" data-amt="${s.amount}">${t('จ่ายแล้ว')}</button></div>`).join('')
-      : `<div class="empty" style="padding:8px">${t('เคลียร์กันครบแล้ว')}</div>`}
-    ${est.length && sug.length ? `<div class="tiny">${t('บางรายการยังใช้เรทประมาณ ยอดจะตรงขึ้นเมื่อใส่ยอดเงินบาทที่ถูกตัดจริง')}</div>` : ''}
-    ${sets.length ? `<div class="dh" style="margin-top:16px"><span>${t('ประวัติการคืนเงิน')}</span></div>` + sets.map(s => `<div class="row tap" data-act="editSettle" data-id="${esc(s.id)}">
-      <div class="c"><div class="t">${esc(s.from)} → ${esc(s.to)}</div><div class="s">${fmtD(s.date)}, ${esc(t(s.method))}</div></div><div class="v num">${money(s.amount, s.cur || x.currency)}</div></div>`).join('') : ''}
-  </div>` : ''}
-  <div class="block">${head('list', t('รายการค่าใช้จ่ายทริป'), t('เรียงตามวัน ล่าสุดอยู่บน'))}
-    ${tripItems.length ? expList(tripItems, x) : `<div class="empty">${t('ยังไม่มีค่าใช้จ่าย')}</div>`}</div>`;
-  const personalSection = `${sectionHead('lock', t('ค่าใช้จ่ายส่วนตัวของฉัน'), tm(sum(personal)))}
-  <div class="privacy">${ico('lock', 15)}<span>${t('เห็นเฉพาะคุณ ไม่รวมในการหารกับเพื่อน')}</span></div>
-  ${personal.length ? catBlock(x, personal, false) : ''}
-  <div class="block">${head('list', t('รายการส่วนตัว'), t('เรียงตามวัน ล่าสุดอยู่บน'))}
-    ${personal.length ? expList(personal, x) : `<div class="empty">${t('ยังไม่มีค่าใช้จ่ายส่วนตัว')}<br>${t('กดปุ่ม + เพื่อบันทึกของที่จ่ายคนเดียว')}</div>`}</div>`;
-  return sharedSection + personalSection;
+  // แตะสลับ "แชร์กับทริป" / "ส่วนตัว" แล้วค่อยเลือกกรองตามวันได้อีกที (วันที่เป็นตัวกรอง ไม่ใช่แท็บแยก เพราะทริปสั้นๆ มักมีแค่ไม่กี่วัน)
+  const sec = T.mSec === 'personal' ? 'personal' : 'shared';
+  const secItems = sec === 'shared' ? tripItems : personal;
+  const days = [...new Set(secItems.map(e => e.date).filter(Boolean))].sort();
+  if (T.mDay && !days.includes(T.mDay)) T.mDay = null;
+  const items = T.mDay ? secItems.filter(e => e.date === T.mDay) : secItems;
+
+  const mseg = `<div class="seg mseg">
+    <button type="button" data-act="mSec" data-v="shared" class="${sec === 'shared' ? 'on' : ''}"><span>${ico('users', 16)}<b class="num">${tm(sum(tripItems))}</b></span><small>${t('แชร์กับทริป')}</small></button>
+    <button type="button" data-act="mSec" data-v="personal" class="${sec === 'personal' ? 'on' : ''}"><span>${ico('lock', 16)}<b class="num">${tm(sum(personal))}</b></span><small>${t('ส่วนตัว')}</small></button>
+  </div>`;
+  const daysBar = days.length ? `<div class="days">
+    <button type="button" class="all${!T.mDay ? ' on' : ''}" style="--dc:var(--ink3)" data-act="mDay" data-d="">${ico('list', 14)}<b style="margin-top:6px">${t('ทั้งหมด')}</b><span>${tf('{n} วัน', { n: days.length })}</span></button>
+    ${days.map(d => `<button type="button" style="--dc:${dayColor(d)}" class="${T.mDay === d ? 'on' : ''}" data-act="mDay" data-d="${d}"><b>${wday(d)}</b><span>${fmtD(d)}</span></button>`).join('')}
+  </div>` : '';
+
+  // "ใครจ่าย ใครใช้" กับ "ต้องคืนเงิน" คิดจากค่าใช้จ่ายทั้งทริปเสมอ ไม่ใช่แค่วันที่กรองไว้ ไม่งั้นยอดหนี้จะผิด
+  if (sec === 'shared') {
+    const { bal, paid, used } = balances(tripItems);
+    const est = tripItems.filter(estimated), sug = suggestPay(bal);
+    const sets = of('settle').sort(byNew);
+    return mseg + daysBar + heroOf(t('ค่าใช้จ่ายทริป'), items) +
+    (multi ? myBlock(bal, paid, used) : '') +
+    catBlock(x, items, multi) +
+    (multi ? `<div class="block">${head('users', t('ใครจ่าย ใครใช้'), isFx() ? t('ยอดเป็นเงินบาท ทุกคนเห็นตรงกัน') : t('ยอดที่แต่ละคนจ่ายและใช้จริง'))}
+      ${x.members.map(m => { const b = Math.round((bal[m] || 0) * 100) / 100;
+        return `<div class="who"><div>${esc(m)}${m === me ? ' ' + t('(คุณ)') : ''}</div><div class="v num ${b > 0 ? 'in' : b < 0 ? 'out' : ''}">${b > 0 ? tf('ได้คืน {x}', { x: baht(b) }) : b < 0 ? tf('ค้าง {x}', { x: baht(-b) }) : t('เคลียร์แล้ว')}</div>
+          <div class="s">${tf('จ่ายไป {a}  ใช้ {b}', { a: baht(paid[m] || 0), b: baht(used[m] || 0) })}</div></div>`; }).join('')}</div>
+    <div class="block">${head('swap', t('ต้องคืนเงิน'), t('โอนน้อยครั้งที่สุดให้ครบ'))}
+      ${sug.length ? sug.map(s => `<div class="row"><div class="c"><div class="t">${esc(s.from)} → ${esc(s.to)}</div>
+        <div class="s num">${baht(s.amount)}${isFx() && +x.rate ? `  (≈ ${tm(s.amount / x.rate)})` : ''}</div></div>
+        <button class="ghost" data-act="doSettle" data-from="${esc(s.from)}" data-to="${esc(s.to)}" data-amt="${s.amount}">${t('จ่ายแล้ว')}</button></div>`).join('')
+        : `<div class="empty" style="padding:8px">${t('เคลียร์กันครบแล้ว')}</div>`}
+      ${est.length && sug.length ? `<div class="tiny">${t('บางรายการยังใช้เรทประมาณ ยอดจะตรงขึ้นเมื่อใส่ยอดเงินบาทที่ถูกตัดจริง')}</div>` : ''}
+      ${sets.length ? `<div class="dh" style="margin-top:16px"><span>${t('ประวัติการคืนเงิน')}</span></div>` + sets.map(s => `<div class="row tap" data-act="editSettle" data-id="${esc(s.id)}">
+        <div class="c"><div class="t">${esc(s.from)} → ${esc(s.to)}</div><div class="s">${fmtD(s.date)}, ${esc(t(s.method))}</div></div><div class="v num">${money(s.amount, s.cur || x.currency)}</div></div>`).join('') : ''}
+    </div>` : '') +
+    `<div class="block">${head('list', t('รายการค่าใช้จ่ายทริป'), t('เรียงตามวัน ล่าสุดอยู่บน'))}
+      ${items.length ? expList(items, x) : `<div class="empty">${t(T.mDay ? 'ไม่มีรายการวันนี้' : 'ยังไม่มีค่าใช้จ่าย')}</div>`}</div>`;
+  }
+  return mseg + daysBar +
+  `<div class="privacy">${ico('lock', 15)}<span>${t('เห็นเฉพาะคุณ ไม่รวมในการหารกับเพื่อน')}</span></div>` +
+  heroOf(t('ค่าใช้จ่ายส่วนตัวของฉัน'), items) +
+  catBlock(x, items, false) +
+  `<div class="block">${head('list', t('รายการส่วนตัว'), t('เรียงตามวัน ล่าสุดอยู่บน'))}
+    ${items.length ? expList(items, x) : `<div class="empty">${t(T.mDay ? 'ไม่มีรายการวันนี้' : 'ยังไม่มีค่าใช้จ่ายส่วนตัว')}${T.mDay ? '' : '<br>' + t('กดปุ่ม + เพื่อบันทึกของที่จ่ายคนเดียว')}</div>`}</div>`;
 }
 
 // ดูรายละเอียดค่าใช้จ่ายก่อน ค่อยกดแก้ไข
@@ -313,7 +331,7 @@ function expDetail(id) {
   const x = trip(), s = shares(e), k = e.amount ? thbOf(e) / e.amount : 0, ri = rateInfo(e);
   const tcLabel = e.method === 'Travel card' && isFx() ? ', ' + (tcAuto(e) ? t('เงินบาท เรทตอนจ่าย') : tf('ยอด {c} ที่แลกไว้', { c: x.currency })) : '';
   openPanel(e.title || t(e.category), `
-  <div class="block dtop"><span class="ic big">${ico(catIco(e.category), 26)}</span>
+  <div class="block dtop"><span class="ic big">${ico(expIco(e), 26)}</span>
     <div class="big num">${tm(e.amount)}</div>
     ${isFx() ? `<div class="lbl num">${estimated(e) ? '≈ ' : ''}${baht(thbOf(e))}${estimated(e) ? `<span class="pill est">${t('ยอดประมาณ')}</span>` : ''}</div>` : ''}
     <div class="kv" style="margin-top:16px">

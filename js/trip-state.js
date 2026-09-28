@@ -2,7 +2,7 @@
 /* =================================================
    ทริป
 ================================================= */
-const T = { list: null, id: null, recs: [], thumbs: {}, thumbCache: {}, rates: {}, sub: 'overview', day: 0 };
+const T = { list: null, id: null, recs: [], thumbs: {}, thumbCache: {}, rates: {}, sub: 'overview', day: 0, mSec: 'shared', mDay: null };
 const CURS = [['JPY','JPY เยนญี่ปุ่น'],['KRW','KRW วอนเกาหลี'],['CNY','CNY หยวนจีน'],['TWD','TWD ดอลลาร์ไต้หวัน'],['HKD','HKD ดอลลาร์ฮ่องกง'],
   ['SGD','SGD ดอลลาร์สิงคโปร์'],['MYR','MYR ริงกิตมาเลเซีย'],['VND','VND ดองเวียดนาม'],['LAK','LAK กีบลาว'],['USD','USD ดอลลาร์สหรัฐ'],
   ['EUR','EUR ยูโร'],['GBP','GBP ปอนด์'],['AUD','AUD ดอลลาร์ออสเตรเลีย'],['CHF','CHF ฟรังก์สวิส'],['THB','THB บาท']];
@@ -260,7 +260,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden && T.
 function goTrip(id) { openTrip(id); }
 async function openTrip(id) {
   if (!T.id) navPush();
-  T.id = id; T.recs = []; T.sub = 'overview'; T.day = 0; T.who = ''; T.catAll = false;
+  T.id = id; T.recs = []; T.sub = 'overview'; T.day = 0; T.who = ''; T.catAll = false; T.mSec = 'shared'; T.mDay = null;
   const firstView = () => { const i = tripDays(trip()).indexOf(ymd(new Date())); if (i >= 0) { T.day = i; T.sub = 'plan'; } };
   const cached = (cacheGet().trips || {})[id];
   if (cached) {

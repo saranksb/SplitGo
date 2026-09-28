@@ -301,8 +301,9 @@ function viewMoney(x) {
     return mseg + daysBar + heroOf(t('ค่าใช้จ่ายทริป'), items) +
     (multi ? myBlock(bal, paid, used) : '') +
     catBlock(x, items, multi) +
-    (multi ? `<div class="block">${head('users', t('ใครจ่าย ใครใช้'), isFx() ? t('ยอดเป็นเงินบาท ทุกคนเห็นตรงกัน') : t('ยอดที่แต่ละคนจ่ายและใช้จริง'))}
-      ${x.members.map(m => { const b = Math.round((bal[m] || 0) * 100) / 100;
+    (multi ? `<div class="block">${head('users', t('ใครจ่าย ใครใช้'), isFx() ? t('ยอดเป็นเงินบาท ทุกคนเห็นตรงกัน') : t('ยอดที่แต่ละคนจ่ายและใช้จริง'),
+      `<button type="button" class="link" data-act="addFund">${ico('plus', 16)}${t('เติมกองกลาง')}</button>`)}
+      ${[...x.members, ...(FUND in bal ? [FUND] : [])].map(m => { const b = Math.round((bal[m] || 0) * 100) / 100;
         return `<div class="who"><div>${esc(m)}${m === me ? ' ' + t('(คุณ)') : ''}</div><div class="v num ${b > 0 ? 'in' : b < 0 ? 'out' : ''}">${b > 0 ? tf('ได้คืน {x}', { x: baht(b) }) : b < 0 ? tf('ค้าง {x}', { x: baht(-b) }) : t('เคลียร์แล้ว')}</div>
           <div class="s">${tf('จ่ายไป {a}  ใช้ {b}', { a: baht(paid[m] || 0), b: baht(used[m] || 0) })}</div></div>`; }).join('')}</div>
     <div class="block">${head('swap', t('ต้องคืนเงิน'), t('โอนน้อยครั้งที่สุดให้ครบ'))}

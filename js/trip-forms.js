@@ -273,7 +273,7 @@ function legForm(l) {
       { k: 'cost', label: tf('ค่าเดินทาง ({c}) ถ้ามี', { c: x.currency }), type: 'money' },
       { k: 'method', label: t('จ่ายด้วย'), type: 'select', options: METHODS },
       ...payFields(),
-      { k: 'payer', label: t('ใครจ่าย'), type: 'select', raw: true, options: x.members },
+      { k: 'payer', label: t('ใครจ่าย'), type: 'select', raw: true, options: x.members.length > 1 ? [...x.members, FUND] : x.members },
       { k: 'members', label: t('หารกับใคร'), type: 'checks', options: x.members }
     ],
     onSave: o => { cleanPay(o); if (o.cost > 0) stampRate(o); return saver('leg')(o); }, onDelete: l ? deleter(l.id) : null
@@ -293,7 +293,7 @@ function expForm(e, preset) {
       { k: 'method', label: t('จ่ายด้วย'), type: 'select', options: METHODS },
       ...payFields(),
       { k: 'date', label: t('วัน'), type: 'select', raw: true, options: dayOpts() },
-      { k: 'payer', label: t('ใครออกเงินไปก่อน'), type: 'select', raw: true, options: x.members },
+      { k: 'payer', label: t('ใครออกเงินไปก่อน'), type: 'select', raw: true, options: x.members.length > 1 ? [...x.members, FUND] : x.members },
       { k: 'split', type: 'split' },
       { k: 'photo', label: t('รูปใบเสร็จ / รูปร้าน'), type: 'photo' },
       { k: 'note', label: t('โน้ต'), type: 'textarea' }
@@ -302,6 +302,7 @@ function expForm(e, preset) {
       if (!(o.amount > 0)) return t('ใส่จำนวนเงิน');
       if (o.mode === 'equal' && !o.members.length) return t('เลือกคนที่หารอย่างน้อย 1 คน');
       if (o.mode === 'custom') { const s = Object.values(o.parts).reduce((a, b) => a + b, 0); if (Math.abs(s - o.amount) > 0.01) return t('ยอดที่แยกแต่ละคนยังไม่เท่ากับยอดรวม'); }
+      if (o.mode === 'self' && o.payer === FUND) return t('เลือก "ส่วนตัว" ไม่ได้ถ้ากองกลางเป็นคนจ่าย');
     },
     onSave: async o => {
       if (o.mode === 'self') o.members = [o.payer];
@@ -356,12 +357,13 @@ function updateSplitHint() {
 }
 function settleForm(s) {
   const x = trip();
+  const fundOpts = x.members.length > 1 ? [...x.members, FUND] : x.members;
   openForm({
-    title: t(s && s.id ? 'แก้ไขการคืนเงิน' : 'บันทึกการคืนเงิน'),
+    title: t(s && s.id ? 'แก้ไขการคืนเงิน' : s && s.to === FUND ? 'เติมเงินกองกลาง' : s && s.from === FUND ? 'กองกลางคืนเงิน' : 'บันทึกการคืนเงิน'),
     data: { date: curDay(), method: 'โอน/QR', ...s, cur: s && s.cur || (s && s.id ? x.currency : 'THB') },
     fields: [
-      { k: 'from', label: t('ใครจ่าย'), type: 'select', raw: true, options: x.members },
-      { k: 'to', label: t('จ่ายให้ใคร'), type: 'select', raw: true, options: x.members },
+      { k: 'from', label: t('ใครจ่าย'), type: 'select', raw: true, options: fundOpts },
+      { k: 'to', label: t('จ่ายให้ใคร'), type: 'select', raw: true, options: fundOpts },
       ...(isFx() ? [{ k: 'cur', label: t('คืนเป็นเงิน'), type: 'seg', options: ['THB', x.currency] }] : []),
       { k: 'amount', label: t('จำนวน'), type: 'number' },
       { k: 'method', label: t('จ่ายด้วย'), type: 'seg', options: ['เงินสด', 'โอน/QR'] },

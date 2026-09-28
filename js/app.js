@@ -18,6 +18,7 @@ $('#trips').addEventListener('click', e => {
     addLeg: () => legForm(), editLeg: () => legForm(rec(id)),
     addExp: () => expForm(), editExp: () => expForm(rec(id)), detail: () => expDetail(id),
     doSettle: () => settleForm({ from: b.dataset.from, to: b.dataset.to, amount: +b.dataset.amt, cur: 'THB' }),
+    addFund: () => settleForm({ from: myName(), to: FUND, method: 'โอน/QR', date: expenseDay() }),
     who: () => { T.who = b.dataset.v; T.catAll = false; renderTrips(); },
     mSec: () => { T.mSec = b.dataset.v; T.mDay = null; renderTrips(); },
     mDay: () => { const v = b.dataset.d || null; T.mDay = T.mDay === v ? null : v; renderTrips(); },

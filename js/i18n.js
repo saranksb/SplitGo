@@ -82,6 +82,8 @@ const EN = {
   'ทั้งทริป': 'Whole trip', 'ยังไม่มีค่าใช้จ่าย': 'No expenses yet', 'ยังไม่มีค่าใช้จ่ายของ {x}': 'No expenses for {x} yet', 'อีก {n} หมวด': '{n} more', 'ย่อ': 'Show less',
   'ใครจ่าย ใครใช้': 'Who paid, who used', 'ยอดเป็นเงินบาท ทุกคนเห็นตรงกัน': 'In Thai baht, the same for everyone', 'ยอดที่แต่ละคนจ่ายและใช้จริง': 'What each person paid and used',
   'ได้คืน {x}': 'Gets back {x}', 'ค้าง {x}': 'Owes {x}', 'จ่ายไป {a}  ใช้ {b}': 'Paid {a}  used {b}',
+  'กองกลาง': 'Group fund', 'เติมกองกลาง': 'Top up fund', 'เติมเงินกองกลาง': 'Add to group fund', 'กองกลางคืนเงิน': 'Fund refund',
+  'เลือก "ส่วนตัว" ไม่ได้ถ้ากองกลางเป็นคนจ่าย': 'Can\'t choose "Personal" when the group fund is the payer',
   'ต้องคืนเงิน': 'Settle up', 'โอนน้อยครั้งที่สุดให้ครบ': 'The fewest transfers to square up', 'จ่ายแล้ว': 'Paid', 'เคลียร์กันครบแล้ว': 'All settled',
   'บางรายการยังใช้เรทประมาณ ยอดจะตรงขึ้นเมื่อใส่ยอดเงินบาทที่ถูกตัดจริง': 'Some items use an estimated rate. Enter the baht actually charged to make this exact.',
   'ประวัติการคืนเงิน': 'Settlement history', 'รายการ': 'Expenses', 'เรียงตามวัน ล่าสุดอยู่บน': 'By day, newest first', 'ไม่ระบุวัน': 'No date',

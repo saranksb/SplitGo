@@ -283,7 +283,7 @@ function expForm(e, preset) {
   const x = trip(); ensureRate();
   openForm({
     title: t(e ? 'แก้ไขค่าใช้จ่าย' : 'เพิ่มค่าใช้จ่าย'),
-    data: e || { date: expenseDay(), payer: myName(), method: 'เงินสด', category: 'อาหาร', mode: (preset && preset.mode) || (x.members.length > 1 ? 'equal' : 'self'),
+    data: e || { date: expenseDay(), payer: (preset && preset.payer) || myName(), method: 'เงินสด', category: 'อาหาร', mode: (preset && preset.mode) || (x.members.length > 1 ? 'equal' : 'self'),
       tcMode: cardState().fxLeft > 0 ? TC_PRE : TC_AUTO },
     autoTc: !e,
     fields: [
@@ -357,13 +357,12 @@ function updateSplitHint() {
 }
 function settleForm(s) {
   const x = trip();
-  const fundOpts = x.members.length > 1 ? [...x.members, FUND] : x.members;
   openForm({
-    title: t(s && s.id ? 'แก้ไขการคืนเงิน' : s && s.to === FUND ? 'เติมเงินกองกลาง' : s && s.from === FUND ? 'กองกลางคืนเงิน' : 'บันทึกการคืนเงิน'),
+    title: t(s && s.id ? 'แก้ไขการคืนเงิน' : s && s.from === FUND ? 'กองกลางคืนเงิน' : 'บันทึกการคืนเงิน'),
     data: { date: curDay(), method: 'โอน/QR', ...s, cur: s && s.cur || (s && s.id ? x.currency : 'THB') },
     fields: [
-      { k: 'from', label: t('ใครจ่าย'), type: 'select', raw: true, options: fundOpts },
-      { k: 'to', label: t('จ่ายให้ใคร'), type: 'select', raw: true, options: fundOpts },
+      { k: 'from', label: t('ใครจ่าย'), type: 'select', raw: true, options: x.members.length > 1 ? [...x.members, FUND] : x.members },
+      { k: 'to', label: t('จ่ายให้ใคร'), type: 'select', raw: true, options: x.members },
       ...(isFx() ? [{ k: 'cur', label: t('คืนเป็นเงิน'), type: 'seg', options: ['THB', x.currency] }] : []),
       { k: 'amount', label: t('จำนวน'), type: 'number' },
       { k: 'method', label: t('จ่ายด้วย'), type: 'seg', options: ['เงินสด', 'โอน/QR'] },
@@ -371,6 +370,25 @@ function settleForm(s) {
     ],
     validate: o => o.from === o.to ? t('คนจ่ายกับคนรับต้องไม่ใช่คนเดียวกัน') : !(o.amount > 0) && t('ใส่จำนวนเงิน'),
     onSave: saver('settle'), onDelete: s && s.id ? deleter(s.id) : null
+  });
+}
+// เติมเงินกองกลาง: ฟอร์มแยกเฉพาะ ง่ายกว่าฟอร์มคืนเงินทั่วไป (ไม่ต้องเลือก "จ่ายให้ใคร" เพราะเป็นกองกลางอยู่แล้ว)
+// ยังเก็บ "ใครเติม" ไว้ เพราะระบบต้องรู้ไว้คิดเครดิตคงเหลือของแต่ละคนตอนกองกลางมีเงินเหลือคืนท้ายทริป
+function fundTopupForm(y) {
+  const x = trip();
+  openForm({
+    title: t(y && y.id ? 'แก้ไขการเติมกองกลาง' : 'เติมเงินกองกลาง'),
+    data: { date: expenseDay(), method: 'โอน/QR', from: myName(), ...y, cur: (y && y.cur) || (y && y.id ? x.currency : 'THB') },
+    fields: [
+      { k: 'amount', label: t('จำนวน'), type: 'number' },
+      ...(isFx() ? [{ k: 'cur', label: t('เติมเป็นเงิน'), type: 'seg', options: ['THB', x.currency] }] : []),
+      { k: 'date', label: t('วัน'), type: 'select', raw: true, options: dayOpts() },
+      { k: 'from', label: t('ใครเติม'), type: 'select', raw: true, options: x.members },
+      { k: 'method', label: t('จ่ายด้วย'), type: 'seg', options: ['เงินสด', 'โอน/QR'] }
+    ],
+    validate: o => !(o.amount > 0) && t('ใส่จำนวนเงิน'),
+    onSave: o => { o.to = FUND; return saver('settle')(o); },
+    onDelete: y && y.id ? deleter(y.id) : null
   });
 }
 function topupForm(y) {

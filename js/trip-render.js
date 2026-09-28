@@ -298,13 +298,12 @@ function viewMoney(x) {
     const { bal, paid, used } = balances(tripItems);
     const est = tripItems.filter(estimated), sug = suggestPay(bal);
     const sets = of('settle').sort(byNew);
-    // กองกลาง: โชว์ยอดคงเหลือ/ขาด + ปุ่มเติมเงินไว้เด่นๆ ด้านบนเลย ไม่ต้องเลื่อนหาถึงจะเจอ
+    // กองกลาง: โชว์ยอดคงเหลือ/ขาด + ปุ่มจ่าย/เติมไว้เด่นๆ ด้านบนเลย ไม่ต้องเลื่อนหาถึงจะเจอ
     const fundBal = Math.round((bal[FUND] || 0) * 100) / 100;
-    const fundRow = multi ? `<div class="row" style="padding:12px 2px 18px">
-      <span class="ic">${ico('wallet', 19)}</span>
-      <div class="c"><div class="t">${t('กองกลาง')}</div><div class="s">${fundBal > 0 ? t('ขาดอยู่') : t('คงเหลือ')} ${baht(Math.abs(fundBal))}${isFx() && +x.rate ? `  (≈ ${tm(Math.abs(fundBal) / x.rate)})` : ''}</div></div>
-      <button type="button" class="ghost" data-act="addFund">${ico('plus', 15)}${t('เติมเงิน')}</button>
-    </div>` : '';
+    const fundRow = multi ? `<div class="block">${head('wallet', t('กองกลาง'),
+        (fundBal > 0 ? t('ขาดอยู่') : t('คงเหลือ')) + ' ' + baht(Math.abs(fundBal)) + (isFx() && +x.rate ? `  (≈ ${tm(Math.abs(fundBal) / x.rate)})` : ''))}
+      <div class="pair"><button type="button" class="ghost" data-act="payFund">${ico('receipt', 16)}${t('จ่ายจากกองกลาง')}</button>
+      <button type="button" class="ghost" data-act="addFund">${ico('plus', 16)}${t('เติมเงิน')}</button></div></div>` : '';
     return mseg + fundRow + daysBar + heroOf(t('ค่าใช้จ่ายทริป'), items) +
     (multi ? myBlock(bal, paid, used) : '') +
     catBlock(x, items, multi) +

@@ -298,11 +298,17 @@ function viewMoney(x) {
     const { bal, paid, used } = balances(tripItems);
     const est = tripItems.filter(estimated), sug = suggestPay(bal);
     const sets = of('settle').sort(byNew);
-    return mseg + daysBar + heroOf(t('ค่าใช้จ่ายทริป'), items) +
+    // กองกลาง: โชว์ยอดคงเหลือ/ขาด + ปุ่มเติมเงินไว้เด่นๆ ด้านบนเลย ไม่ต้องเลื่อนหาถึงจะเจอ
+    const fundBal = Math.round((bal[FUND] || 0) * 100) / 100;
+    const fundRow = multi ? `<div class="row" style="padding:12px 2px 18px">
+      <span class="ic">${ico('wallet', 19)}</span>
+      <div class="c"><div class="t">${t('กองกลาง')}</div><div class="s">${fundBal > 0 ? t('ขาดอยู่') : t('คงเหลือ')} ${baht(Math.abs(fundBal))}${isFx() && +x.rate ? `  (≈ ${tm(Math.abs(fundBal) / x.rate)})` : ''}</div></div>
+      <button type="button" class="ghost" data-act="addFund">${ico('plus', 15)}${t('เติมเงิน')}</button>
+    </div>` : '';
+    return mseg + fundRow + daysBar + heroOf(t('ค่าใช้จ่ายทริป'), items) +
     (multi ? myBlock(bal, paid, used) : '') +
     catBlock(x, items, multi) +
-    (multi ? `<div class="block">${head('users', t('ใครจ่าย ใครใช้'), isFx() ? t('ยอดเป็นเงินบาท ทุกคนเห็นตรงกัน') : t('ยอดที่แต่ละคนจ่ายและใช้จริง'),
-      `<button type="button" class="link" data-act="addFund">${ico('plus', 16)}${t('เติมกองกลาง')}</button>`)}
+    (multi ? `<div class="block">${head('users', t('ใครจ่าย ใครใช้'), isFx() ? t('ยอดเป็นเงินบาท ทุกคนเห็นตรงกัน') : t('ยอดที่แต่ละคนจ่ายและใช้จริง'))}
       ${[...x.members, ...(FUND in bal ? [FUND] : [])].map(m => { const b = Math.round((bal[m] || 0) * 100) / 100;
         return `<div class="who"><div>${esc(m)}${m === me ? ' ' + t('(คุณ)') : ''}</div><div class="v num ${b > 0 ? 'in' : b < 0 ? 'out' : ''}">${b > 0 ? tf('ได้คืน {x}', { x: baht(b) }) : b < 0 ? tf('ค้าง {x}', { x: baht(-b) }) : t('เคลียร์แล้ว')}</div>
           <div class="s">${tf('จ่ายไป {a}  ใช้ {b}', { a: baht(paid[m] || 0), b: baht(used[m] || 0) })}</div></div>`; }).join('')}</div>

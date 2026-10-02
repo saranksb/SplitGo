@@ -11,10 +11,8 @@ window.addEventListener('error', function (e) {
 });
 </script>
 <meta charset="utf-8">
-<!-- กันแอปที่ปักหน้าจอโฮม (iOS) ค้างโค้ดเก่า: บางเครื่องไม่รีเฟรชเองแม้ปิดเปิดแอปใหม่ -->
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
+<!-- กันแอปที่ปักหน้าจอโฮม (iOS) ค้างโค้ดเก่านานเกินไป แต่ไม่ห้ามแคชเลย (no-store จะบังคับโหลดใหม่จากเน็ตทุกครั้งที่เปิดแอป ทำให้เปิดช้า) -->
+<meta http-equiv="Cache-Control" content="max-age=300">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>Split&amp;Go</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -369,17 +367,17 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none}
 </div>
 
 <!-- เลข v= ท้ายไฟล์ js กันเบราว์เซอร์/แอปที่ปักหน้าจอโฮมใช้ไฟล์เก่าค้าง ต้องขยับเลขทุกครั้งที่แก้ไฟล์ js ไฟล์ไหนก็ได้ -->
-<script src="js/i18n.js?v=13"></script>
-<script src="js/icons.js?v=13"></script>
-<script src="js/helpers.js?v=13"></script>
-<script src="js/api.js?v=13"></script>
-<script src="js/auth.js?v=13"></script>
-<script src="js/nav.js?v=13"></script>
-<script src="js/account-categories.js?v=13"></script>
-<script src="js/form-engine.js?v=13"></script>
-<script src="js/trip-state.js?v=13"></script>
-<script src="js/trip-render.js?v=13"></script>
-<script src="js/trip-forms.js?v=13"></script>
-<script src="js/app.js?v=13"></script>
+<script src="js/i18n.js?v=14"></script>
+<script src="js/icons.js?v=14"></script>
+<script src="js/helpers.js?v=14"></script>
+<script src="js/api.js?v=14"></script>
+<script src="js/auth.js?v=14"></script>
+<script src="js/nav.js?v=14"></script>
+<script src="js/account-categories.js?v=14"></script>
+<script src="js/form-engine.js?v=14"></script>
+<script src="js/trip-state.js?v=14"></script>
+<script src="js/trip-render.js?v=14"></script>
+<script src="js/trip-forms.js?v=14"></script>
+<script src="js/app.js?v=14"></script>
 </body>
 </html>

@@ -31,12 +31,12 @@ function tripForm(x) {
         catch (y) { throw new Error(t('ดึงเรทวันนี้ไม่ได้ ใส่เรทประมาณเองก่อน')); }
       }
       const r = await run('saveRec', o);
-      if (isNew) {
-        navPush(); T.id = r.id; T.recs = [r]; T.thumbs = {}; T.rates = {}; T.sub = 'overview'; T.day = 0;
-        await addDefaultChecklist(r);
-      } else upsert(r);
-      await addDefaultContacts(r); // เติม/อัปเดตเบอร์ฉุกเฉิน ทั้งตอนสร้างใหม่และแก้ไข (เพิ่งมาเลือก/เปลี่ยนประเทศทีหลังก็ได้)
+      if (isNew) { navPush(); T.id = r.id; T.recs = [r]; T.thumbs = {}; T.rates = {}; T.sub = 'overview'; T.day = 0; }
+      else upsert(r);
       renderTrips(); toast(t('บันทึกทริปแล้ว'));
+      // เช็คลิสต์/เบอร์ฉุกเฉินตั้งต้น ไม่ต้องรอให้เสร็จก่อนปิดฟอร์ม (เพิ่มแยกกันหลายรายการ ถ้ารอทีละรายการจะช้า) ให้ทำงานต่อเบื้องหลังแล้วค่อยรีเฟรชหน้าจอ
+      const refresh = () => { if (T.id === r.id) renderTrips(); };
+      Promise.all([isNew ? addDefaultChecklist(r) : null, addDefaultContacts(r)]).then(refresh);
     },
     delLabel: t('ลบทริปนี้ทั้งหมด'),
     onDelete: isNew ? null : async () => {
@@ -51,9 +51,10 @@ const CHECK_COMMON = [['ยาประจำตัว', 'pill'], ['ที่ช
 const CHECK_ABROAD = [['พาสปอร์ต / วีซ่า', 'idcard'], ['ประกันเดินทาง', 'shield'], ['ซิม/eSIM เน็ตต่างประเทศ', 'sim'], ['แจ้งธนาคารก่อนใช้บัตรต่างประเทศ', 'card']];
 async function addDefaultChecklist(trip) {
   const items = trip.scope === 'ต่างประเทศ' ? [...CHECK_ABROAD, ...CHECK_COMMON] : CHECK_COMMON;
-  for (const [title, icon] of items) {
+  // ยิงพร้อมกันทุกรายการ แทนที่จะรอทีละรายการ (Apps Script แต่ละครั้งช้า รอทีละอันหลายรายการรวมกันจะช้ามาก)
+  await Promise.all(items.map(async ([title, icon]) => {
     try { const r = await run('saveRec', { kind: 'check', tripId: trip.id, title, icon, done: false }); upsert(r); } catch (e) {}
-  }
+  }));
 }
 // เพิ่ม/อัปเดตเบอร์ฉุกเฉิน-สถานทูตไทยอัตโนมัติ ตามประเทศที่เลือก
 // เรียกได้ทั้งตอนสร้างทริปใหม่และแก้ไขทริปเดิม (เช่น เพิ่งมาเลือกประเทศทีหลัง หรือเปลี่ยนประเทศ)
@@ -68,12 +69,14 @@ async function addDefaultContacts(trip) {
     try { const r = await run('saveRec', rec); upsert(r); } catch (e2) {}
   };
   const e = EMBASSY[trip.country];
+  const jobs = [];
   if (e) {
-    await upsertByTitle(t('สถานทูตไทย'), e.phone, tf('{c}{m}', { c: e.city, m: e.more ? ' · ' + e.more : '' }));
-    await upsertByTitle(t('เบอร์ฉุกเฉินท้องถิ่น'), e.emg.match(/\d[\d\/]*\d|\d/)?.[0] || '', e.emg);
+    jobs.push(upsertByTitle(t('สถานทูตไทย'), e.phone, tf('{c}{m}', { c: e.city, m: e.more ? ' · ' + e.more : '' })));
+    jobs.push(upsertByTitle(t('เบอร์ฉุกเฉินท้องถิ่น'), e.emg.match(/\d[\d\/]*\d|\d/)?.[0] || '', e.emg));
   }
   if (!existing.some(c => c.title === t('กรมการกงสุล (Call Center 24 ชม.)')))
-    await upsertByTitle(t('กรมการกงสุล (Call Center 24 ชม.)'), '+66-2-572-8442', t('โทรจากไทย 0-2572-8442'));
+    jobs.push(upsertByTitle(t('กรมการกงสุล (Call Center 24 ชม.)'), '+66-2-572-8442', t('โทรจากไทย 0-2572-8442')));
+  await Promise.all(jobs); // ยิงพร้อมกันทุกรายการ แทนที่จะรอทีละรายการ
 }
 async function dupTrip(tripId) {
   try {
